@@ -15,12 +15,11 @@ services:
       mountPath: /app/data
       sizeGB: 1
 
-  - type: web
+  - type: static
     name: barakatoping-frontend
-    env: static
     buildCommand: cd frontend && npm install && npm run build
-    publishDir: frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    publishPath: frontend/dist
+    headers:
+      - path: /*
+        name: ngrok-skip-browser-warning
+        value: "true"

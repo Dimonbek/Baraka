@@ -4,7 +4,10 @@ class ApiError extends Error {
   status: number;
   data: any;
   constructor(status: number, data: any) {
-    super(data?.detail || 'Xatolik yuz berdi');
+    const message = data?.detail 
+      ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) 
+      : 'Xatolik yuz berdi';
+    super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;

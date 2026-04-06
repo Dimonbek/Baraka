@@ -6,9 +6,11 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
 
 # --- Telegram Settings ---
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-NGROK_URL = os.getenv("NGROK_URL", "shadowed-adelyn-goosenecked.ngrok-free.dev")
+NGROK_URL = os.getenv("NGROK_URL", "")
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
-APP_URL = RENDER_URL or f"https://{NGROK_URL}"
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+# The bot button should point to the frontend (Vercel), not the backend API
+APP_URL = FRONTEND_URL or RENDER_URL or f"https://{NGROK_URL}"
 
 # --- API Settings ---
 API_URL = os.getenv("API_URL", "http://localhost:8000")

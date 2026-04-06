@@ -299,6 +299,49 @@ def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User =
     if not restaurant: return []
     return db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).order_by(models.Dish.status == 'active', models.Dish.created_at.desc()).all()
 
+@app.get("/api/v1/seller/profile")
+def get_seller_profile(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    if not restaurant:
+        return {"is_seller": False, "restaurant": None}
+    return {
+        "is_seller": True,
+        "role": current_user.role,
+        "restaurant": {
+            "id": restaurant.id,
+            "name": restaurant.name,
+            "address": restaurant.address,
+            "status": restaurant.status
+        }
+    }
+
+@app.post("/api/v1/seller/register")
+def register_seller(
+    name: str = Form(...),
+    address: str = Form(...),
+    lat: Optional[float] = Form(None),
+    lng: Optional[float] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    existing = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Sizda allaqachon restoran ro'yxatdan o'tgan.")
+
+    new_restaurant = models.Restaurant(
+        owner_id=current_user.id,
+        name=name,
+        address=address,
+        latitude=lat,
+        longitude=lng,
+        status="active" # In real app could be 'pending'
+    )
+    
+    current_user.role = "seller"
+    db.add(new_restaurant)
+    db.commit()
+    return {"status": "success", "message": "Restoran muvaffaqiyatli ro'yxatdan o'tdi!"}
+
 # --- Common Endpoints ---
 
 @app.post("/api/v1/orders")
@@ -348,18 +391,19 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), c
         if dish and dish.restaurant and dish.restaurant.owner:
             owner_telegram_id = dish.restaurant.owner.telegram_id
             
-            # Message without user info (Anonymity)
+            # Message without complex formatting to ensure delivery
             stars = "⭐" * review.rating
             notification_text = (
-                f"📝 **Yangi mijoz fikri!**\n\n"
+                f"📝 YANGI MIJOZ FIKRI!\n\n"
                 f"🥘 Taom: {dish.name}\n"
                 f"⭐ Baho: {stars} ({review.rating}/5)\n"
                 f"💬 Izoh: {review.comment or 'Izoh qoldirilmagan'}\n\n"
                 f"💡 Bu fikr mijoz tomonidan maxfiy yuborildi."
             )
             
-            # We use an async task to send the message without blocking the response
-            asyncio.create_task(bot.bot.send_message(owner_telegram_id, notification_text, parse_mode="Markdown"))
+            # Send as plain text to be 100% sure it delivers
+            asyncio.create_task(bot.bot.send_message(owner_telegram_id, notification_text))
+            print(f" [NOTIF SUCCESS] Feedback notification sent to {owner_telegram_id}")
     except Exception as e:
         print(f" [NOTIF ERROR] Could not send feedback notification: {e}")
 

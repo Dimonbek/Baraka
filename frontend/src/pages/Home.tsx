@@ -306,7 +306,7 @@ function Home() {
                 </div>
                 <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 mb-8">
                   <p className="text-xs text-orange-400 font-bold leading-relaxed uppercase tracking-wide">
-                    ⚠️ Diqqat: Ushbu bron faqat 30 daqiqa davomida amal qiladi.
+                    ⚠️ Diqqat: Ushbu bron faqat <span className="text-white">{pickupTime} daqiqa</span> davomida amal qiladi.
                   </p>
                 </div>
                 <button 

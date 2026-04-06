@@ -57,8 +57,8 @@ async def set_user_menu_button(user_id: int):
 async def start_cmd(message: types.Message, state: FSMContext):
     user = get_current_db_user(message.from_user.id)
     
-    # Check if user already registered with phone number
-    if user and user.phone_number:
+    # Check if user already fully registered (both name and phone)
+    if user and user.full_name and user.phone_number and len(user.phone_number) > 5:
         await set_user_menu_button(message.from_user.id)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🍱 Baraka Topingni ochish", web_app=WebAppInfo(url=APP_URL))]
@@ -71,7 +71,8 @@ async def start_cmd(message: types.Message, state: FSMContext):
         )
         return
 
-    # If not registered, start the registration flow
+    # If NOT fully registered, clear existing state and START fresh
+    await state.clear()
     await message.answer(
         "Assalomu alaykum! Baraka Toping botiga xush kelibsiz. \n\n"
         "Baraka isrof qilingan joydan qochadi. \n\n"
@@ -80,8 +81,16 @@ async def start_cmd(message: types.Message, state: FSMContext):
     )
     await state.set_state(RegStates.waiting_for_name)
 
+@dp.message(Command("reset"))
+async def reset_cmd(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Ro'yxatdan o'tish holati bekor qilindi. Qaytadan boshlash uchun /start bosing.")
+
 @dp.message(RegStates.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext):
+    if not message.text or len(message.text) < 2:
+        await message.answer("Iltimos, ismingizni to'liq kiriting:")
+        return
     await state.update_data(name=message.text)
     
     phone_keyboard = ReplyKeyboardMarkup(keyboard=[
@@ -89,7 +98,7 @@ async def process_name(message: types.Message, state: FSMContext):
     ], resize_keyboard=True, one_time_keyboard=True)
     
     await message.answer(
-        f"Raxmat, {message.text}! Endi telefon raqamingizni yuboring (Pastdagi tugmani bosing):",
+        f"Raxmat, {message.text}! Endi telefon raqamingizni yuboring (Tugmani bosing yoki +998... formatida yozing):",
         reply_markup=phone_keyboard
     )
     await state.set_state(RegStates.waiting_for_phone)
@@ -100,11 +109,16 @@ async def process_phone(message: types.Message, state: FSMContext):
     phone = ""
     if message.contact:
         phone = message.contact.phone_number
-    else:
+    elif message.text:
         phone = message.text
     
-    # Clean and validate Uzbek phone number
-    clean_phone = phone.replace("+", "").replace(" ", "")
+    # Advanced cleaning
+    clean_phone = "".join(filter(str.isdigit, phone))
+    
+    # Convert local format to international if starts with 90, 91, etc. (9 digits)
+    if len(clean_phone) == 9:
+        clean_phone = "998" + clean_phone
+    
     if not clean_phone.startswith("998") or len(clean_phone) != 12:
         await message.answer("Iltimos, faqat O'zbekiston raqamini kiriting (Masalan: +998901234567)")
         return
@@ -113,11 +127,8 @@ async def process_phone(message: types.Message, state: FSMContext):
     save_user_info(message.from_user.id, full_name=data.get("name"), phone_number=f"+{clean_phone}")
     
     await state.clear()
-    
-    # After registration, set individual menu button 
     await set_user_menu_button(message.from_user.id)
 
-    # After registration, show the WebApp button
     webapp_keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🍱 Baraka Topingni ochish", web_app=WebAppInfo(url=APP_URL))]
     ])

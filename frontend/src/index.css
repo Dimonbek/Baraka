@@ -2,18 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --tg-theme-bg-color: #ffffff;
-  --tg-theme-text-color: #000000;
-  --tg-theme-hint-color: #999999;
-  --tg-theme-link-color: #2481cc;
-  --tg-theme-button-color: #2481cc;
-  --tg-theme-button-text-color: #ffffff;
+@layer base {
+  :root {
+    --tg-theme-bg-color: #0f172a;
+    --tg-theme-secondary-bg-color: #1e293b;
+    --tg-theme-text-color: #f8fafc;
+    --tg-theme-hint-color: #94a3b8;
+    --tg-theme-link-color: #38bdf8;
+    --tg-theme-button-color: #0ea5e9;
+    --tg-theme-button-text-color: #ffffff;
+    --primary: #0ea5e9;
+    --primary-foreground: #ffffff;
+    --secondary: #1e293b;
+    --accent: #38bdf8;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    @apply font-sans antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+  }
 }
 
-body {
-  margin: 0;
-  background-color: var(--tg-theme-bg-color);
-  color: var(--tg-theme-text-color);
-  @apply font-sans;
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-xl transition-all duration-300;
+  }
+  
+  .glass-button {
+    @apply relative px-6 py-3 rounded-xl font-semibold bg-primary text-white shadow-lg shadow-primary/20 
+           hover:shadow-primary/40 active:scale-95 transition-all duration-200 overflow-hidden;
+  }
+
+  .nav-blur {
+    @apply sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/5;
+  }
+
+  .premium-card {
+    @apply relative p-4 rounded-3xl bg-secondary border border-white/5 shadow-2xl;
+  }
+}
+
+/* Base Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Scrollbar Hide */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

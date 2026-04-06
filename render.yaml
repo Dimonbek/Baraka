@@ -6,7 +6,7 @@ services:
     startCommand: python -m backend.src.main
     envVars:
       - key: DATABASE_URL
-        value: sqlite:///./barakatoping.db
+        value: sqlite:////app/data/barakatoping.db
       - key: PYTHONUNBUFFERED
         value: "true"
       - fromGroup: baraka-secrets

@@ -54,9 +54,8 @@ def start_project():
         processes.append(frontend_p)
 
         # 4. Ngrok Tunnel (Live URL)
-        # Vite configda ko'rsatilgan domainni ishlatamiz
-        ngrok_url = "shadowed-adelyn-goosenecked.ngrok-free.dev"
-        if ngrok_token and os.path.exists(ngrok_cmd):
+        ngrok_url = os.getenv("NGROK_URL")
+        if ngrok_token and os.path.exists(ngrok_cmd) and ngrok_url:
             print(f" [WORLD] Ngrok tunnel ochilmoqda: https://{ngrok_url}")
             # --url flagi yangi versiyalarda tavsiya etiladi
             ngrok_p = subprocess.Popen(

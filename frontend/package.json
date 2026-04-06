@@ -12,13 +12,17 @@
   "dependencies": {
     "@telegram-apps/sdk-react": "^2.0.0",
     "autoprefixer": "^10.4.17",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.7.0",
     "postcss": "^8.4.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.14.0",
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
+    "@types/node": "^25.5.2",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",

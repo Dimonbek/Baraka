@@ -9,6 +9,8 @@ Ushbu hujjat loyihada muhokama qilinadigan savollar, kutilayotgan o'zgarishlar v
 - ✅ **Frontend:** Vercel (Live), Baraka Toping brendingi tayyor.
 - ✅ **Bot:** Polling ishlayapti, global menyu tugmasi yangilangan.
 - ✅ **Branding:** Ism "Baraka Toping" ga o'zgardi, shior: "Baraka isrof qilingan joydan qochadi."
+- ✅ **Favorites Fix:** Authenticated API ga o'tkazildi (Push qilinishi kutilmoqda).
+- ✅ **Feedback System:** Maxfiy bildirishnomalar qo'shildi (Push qilinishi kutilmoqda).
 
 ---
 

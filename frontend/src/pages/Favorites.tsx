@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Stars, MapPin, Store, ArrowRight, ChevronRight } from 'lucide-react'
+import { Heart, Stars, MapPin, Store, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { API_BASE_URL } from '../config'
+import { api } from '../services/api'
+import { toast } from 'react-hot-toast'
 
 interface FavoriteRestaurant {
   id: number;
@@ -15,13 +16,18 @@ function Favorites() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/v1/favorites`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
-      .then(res => res.json())
-      .then(data => {
+    const loadFavorites = async () => {
+      setLoading(true);
+      try {
+        const data = await api.get<FavoriteRestaurant[]>('/api/v1/favorites');
         setFavorites(data);
+      } catch (err) {
+        toast.error("Saralanganlarni yuklab bo'lmadi");
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    loadFavorites();
   }, []);
 
   return (

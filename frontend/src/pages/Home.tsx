@@ -31,6 +31,7 @@ function Home() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [orderQuantity, setOrderQuantity] = useState(1);
+  const [pickupTime, setPickupTime] = useState(30);
 
   useEffect(() => {
     const savedLat = localStorage.getItem('user_lat');
@@ -70,7 +71,7 @@ function Home() {
   const handleBook = async (dishId: number) => {
     const tg = (window as any).Telegram.WebApp;
     try {
-      const data = await api.post(`/api/v1/orders?dish_id=${dishId}&quantity=${orderQuantity}`);
+      const data = await api.post(`/api/v1/orders?dish_id=${dishId}&quantity=${orderQuantity}&pickup_time=${pickupTime}`);
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       setBookingStatus(data);
       toast.success("Muvaffaqiyatli bron qilindi!");
@@ -249,6 +250,25 @@ function Home() {
                       <button onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-white/50 active:scale-90"><Minus size={16}/></button>
                       <span className="text-xl font-black w-4 text-center">{orderQuantity}</span>
                       <button onClick={() => setOrderQuantity(Math.min(selectedDish.quantity, orderQuantity + 1))} className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white active:scale-90 shadow-md shadow-primary/20"><Plus size={16}/></button>
+                   </div>
+                </div>
+
+                <div className="mb-8">
+                   <div className="text-[10px] text-tg-hint font-bold uppercase tracking-widest mb-3">Olib ketish vaqti (daqiqa)</div>
+                   <div className="grid grid-cols-4 gap-2">
+                      {[15, 30, 45, 60].map(time => (
+                         <button 
+                            key={time}
+                            onClick={() => setPickupTime(time)}
+                            className={`py-3 rounded-xl font-bold text-sm transition-all ${
+                               pickupTime === time 
+                               ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                               : 'bg-white/5 text-tg-hint border border-white/5 hover:bg-white/10'
+                            }`}
+                         >
+                            {time}
+                         </button>
+                      ))}
                    </div>
                 </div>
 

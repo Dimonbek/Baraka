@@ -172,7 +172,9 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
     for order in orders:
         # created_at is aware because of timezone=True in models
         elapsed = (now - order.created_at).total_seconds()
-        remaining = 1800 - elapsed # 30 min expiration window
+        # Use order.pickup_time or default to 1800s (30m)
+        max_duration = (order.pickup_time or 30) * 60
+        remaining = max_duration - elapsed 
         
         if remaining > 0 and order.status == 'pending':
             result.append({
@@ -300,7 +302,7 @@ def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User =
 # --- Common Endpoints ---
 
 @app.post("/api/v1/orders")
-def create_order(dish_id: int, quantity: int = 1, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def create_order(dish_id: int, quantity: int = 1, pickup_time: int = 30, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     dish = db.query(models.Dish).filter(models.Dish.id == dish_id).first()
     if not dish: raise HTTPException(status_code=404, detail="Taom topilmadi")
     if dish.quantity < quantity: raise HTTPException(status_code=400, detail="Zaxira yetarli emas")
@@ -312,6 +314,7 @@ def create_order(dish_id: int, quantity: int = 1, db: Session = Depends(get_db),
         buyer_id=current_user.id,
         dish_id=dish.id,
         quantity=quantity,
+        pickup_time=pickup_time,
         verification_code=verification_code,
         status="pending"
     )
@@ -327,6 +330,7 @@ def create_order(dish_id: int, quantity: int = 1, db: Session = Depends(get_db),
 
 @app.post("/api/v1/reviews")
 def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # Create the review record
     new_review = models.Review(
         user_id=current_user.id,
         dish_id=review.dish_id,
@@ -335,6 +339,30 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), c
     )
     db.add(new_review)
     db.commit()
+    db.refresh(new_review)
+
+    # Send notification to the restaurant owner (Seller)
+    try:
+        # Find the restaurant owner via the dish
+        dish = db.query(models.Dish).filter(models.Dish.id == review.dish_id).first()
+        if dish and dish.restaurant and dish.restaurant.owner:
+            owner_telegram_id = dish.restaurant.owner.telegram_id
+            
+            # Message without user info (Anonymity)
+            stars = "⭐" * review.rating
+            notification_text = (
+                f"📝 **Yangi mijoz fikri!**\n\n"
+                f"🥘 Taom: {dish.name}\n"
+                f"⭐ Baho: {stars} ({review.rating}/5)\n"
+                f"💬 Izoh: {review.comment or 'Izoh qoldirilmagan'}\n\n"
+                f"💡 Bu fikr mijoz tomonidan maxfiy yuborildi."
+            )
+            
+            # We use an async task to send the message without blocking the response
+            asyncio.create_task(bot.bot.send_message(owner_telegram_id, notification_text, parse_mode="Markdown"))
+    except Exception as e:
+        print(f" [NOTIF ERROR] Could not send feedback notification: {e}")
+
     return {"status": "success"}
 
 @app.get("/api/v1/notifications")
@@ -345,21 +373,21 @@ def get_notifications(db: Session = Depends(get_db), current_user: models.User =
 
 @app.on_event("startup")
 async def startup_event():
+    # Ensure tables exist
+    models.Base.metadata.create_all(bind=engine)
+    
+    # Auto-migration for pickup_time column if it doesn't exist
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_time INTEGER DEFAULT 30"))
+            conn.commit()
+    except Exception as e:
+        print(f" [DB DEBUG] Migration note: {e}")
+
     seeder.seed_data()
     
-    # Globally set the bot's menu button to use the correct frontend URL
-    try:
-        from aiogram.types import MenuButtonWebApp, WebAppInfo
-        await bot.bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(
-                text="🍱 Baraka Toping",
-                web_app=WebAppInfo(url=bot.APP_URL)
-            )
-        )
-        print(f" [BOT] Global Menu Button updated to: {bot.APP_URL}")
-    except Exception as e:
-        print(f" [BOT ERROR] Could not update menu button: {e}")
-
+    # Run bot and tasks
     asyncio.create_task(bot.run_bot())
     asyncio.create_task(tasks.cleanup_expired_orders())
     asyncio.create_task(tasks.keep_alive())

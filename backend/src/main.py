@@ -204,24 +204,31 @@ def get_favorites(current_user: models.User = Depends(get_current_user)):
 
 @app.post("/api/v1/favorites/{restaurant_id}")
 def add_favorite(restaurant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
-    if not restaurant: raise HTTPException(status_code=404, detail="Restoran topilmadi")
-    if restaurant not in current_user.favorite_restaurants:
-        current_user.favorite_restaurants.append(restaurant)
-        db.add(current_user)
-        db.commit()
-        db.refresh(current_user)
+    # Direct check using association table
+    is_fav = db.query(models.favorites).filter_by(user_id=current_user.id, restaurant_id=restaurant_id).first()
+    if not is_fav:
+        try:
+            stmt = models.favorites.insert().values(user_id=current_user.id, restaurant_id=restaurant_id)
+            db.execute(stmt)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Saralanganlarga qo'shishda xatolik yuz berdi")
     return {"status": "success"}
 
 @app.delete("/api/v1/favorites/{restaurant_id}")
 def remove_favorite(restaurant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
-    if not restaurant: raise HTTPException(status_code=404, detail="Restoran topilmadi")
-    if restaurant in current_user.favorite_restaurants:
-        current_user.favorite_restaurants.remove(restaurant)
-        db.add(current_user)
+    # Direct delete using association table
+    try:
+        stmt = models.favorites.delete().where(
+            models.favorites.c.user_id == current_user.id,
+            models.favorites.c.restaurant_id == restaurant_id
+        )
+        db.execute(stmt)
         db.commit()
-        db.refresh(current_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Saralanganlardan o'chirishda xatolik yuz berdi")
     return {"status": "success"}
 
 # --- Seller Endpoints ---

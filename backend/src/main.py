@@ -149,6 +149,7 @@ def get_dishes(lat: float = None, lng: float = None, db: Session = Depends(get_d
 
         result.append({
             "id": dish.id,
+            "restaurant_id": dish.restaurant_id,
             "restaurant_name": dish.restaurant.name,
             "name": dish.name,
             "original_price": dish.original_price,

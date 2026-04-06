@@ -6,14 +6,12 @@ services:
     startCommand: python -m backend.src.main
     envVars:
       - key: DATABASE_URL
-        value: sqlite:////app/data/barakatoping.db
+        fromDatabase:
+          name: baraka-db
+          property: connectionString
       - key: PYTHONUNBUFFERED
         value: "true"
       - fromGroup: baraka-secrets
-    disk:
-      name: baraka-data
-      mountPath: /app/data
-      sizeGB: 1
 
   - type: web
     name: barakatoping-frontend
@@ -24,3 +22,8 @@ services:
       - path: /*
         name: ngrok-skip-browser-warning
         value: "true"
+
+databases:
+  - name: baraka-db
+    plan: free
+    region: frankfurt

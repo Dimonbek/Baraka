@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, BigInteger, ForeignKey, Table, Time, TIMESTAMP, DECIMAL, Text
 from sqlalchemy.orm import relationship
-from geoalchemy2 import Geography
 from .database import Base
 from sqlalchemy.sql import func
 

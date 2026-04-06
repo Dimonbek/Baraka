@@ -71,6 +71,13 @@ async def start_cmd(message: types.Message, state: FSMContext):
         )
         return
 
+    # VERY IMPORTANT: For non-registered users, RESET their menu button to default (hides it)
+    try:
+        from aiogram.types import MenuButtonDefault
+        await bot.set_chat_menu_button(chat_id=message.from_user.id, menu_button=MenuButtonDefault())
+    except Exception as e:
+        print(f" [BOT DEBUG] Could not reset menu button: {e}")
+
     # If NOT fully registered, clear existing state and START fresh
     await state.clear()
     await message.answer(

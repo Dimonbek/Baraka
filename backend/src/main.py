@@ -28,16 +28,10 @@ app = FastAPI(
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://baraka-nu.vercel.app",
-        "https://baraka-dlukps8g7-dilmurodnextday-4148s-projects.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "*"
-    ], 
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*", "X-Telegram-Init-Data"],
+    allow_headers=["*"],
 )
 
 # Global Error Handler
@@ -431,6 +425,16 @@ async def startup_event():
 
     seeder.seed_data()
     
+    # RADICAL RESET of global menu button to hide it for everyone by default
+    try:
+        from aiogram.types import MenuButtonDefault
+        await bot.bot.set_chat_menu_button(menu_button=MenuButtonDefault())
+        print(" [BOT CONFIG] Global Menu Button RESET to Default (Hidden)")
+        # Also delete global commands just in case they trigger anything
+        await bot.bot.delete_my_commands()
+    except Exception as e:
+        print(f" [BOT ERROR] Could not RESET global menu button: {e}")
+
     # Run bot and tasks
     asyncio.create_task(bot.run_bot())
     asyncio.create_task(tasks.cleanup_expired_orders())

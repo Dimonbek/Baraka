@@ -338,6 +338,20 @@ def get_notifications(db: Session = Depends(get_db), current_user: models.User =
 @app.on_event("startup")
 async def startup_event():
     seeder.seed_data()
+    
+    # Globally set the bot's menu button to use the correct frontend URL
+    try:
+        from aiogram.types import MenuButtonWebApp, WebAppInfo
+        await bot.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(
+                text="🍱 Barakatoping",
+                web_app=WebAppInfo(url=bot.APP_URL)
+            )
+        )
+        print(f" [BOT] Global Menu Button updated to: {bot.APP_URL}")
+    except Exception as e:
+        print(f" [BOT ERROR] Could not update menu button: {e}")
+
     asyncio.create_task(bot.run_bot())
     asyncio.create_task(tasks.cleanup_expired_orders())
     asyncio.create_task(tasks.keep_alive())

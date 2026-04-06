@@ -15,7 +15,7 @@ services:
       mountPath: /app/data
       sizeGB: 1
 
-  - type: static
+  - type: static_site
     name: barakatoping-frontend
     buildCommand: cd frontend && npm install && npm run build
     publishPath: frontend/dist

@@ -97,7 +97,7 @@ function Home() {
         d.restaurant_id === dish.restaurant_id ? { ...d, is_favorite: !dish.is_favorite } : d
       ));
     } catch (err: any) {
-      toast.error("Amalni bajarib bo'lmadi");
+      toast.error(err.message || "Xatolik yuz berdi");
     }
   };
 

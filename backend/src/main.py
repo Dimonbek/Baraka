@@ -20,8 +20,8 @@ from . import models, schemas, tasks, bot, seeder, config
 
 # FastAPI app initialization
 app = FastAPI(
-    title="Barakatoping API", 
-    description="Food Rescue Platform for Telegram Web Apps", 
+    title="Baraka Toping API", 
+    description="Food Rescue Platform for Telegram Web Apps - Baraka isrof qilingan joydan qochadi.", 
     version="2.0.0"
 )
 
@@ -128,7 +128,7 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "message": "Barakatoping API is running"}
+    return {"status": "ok", "message": "Baraka Toping API is running"}
 
 # --- Buyer Endpoints ---
 
@@ -352,7 +352,7 @@ async def startup_event():
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         await bot.bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(
-                text="🍱 Barakatoping",
+                text="🍱 Baraka Toping",
                 web_app=WebAppInfo(url=bot.APP_URL)
             )
         )

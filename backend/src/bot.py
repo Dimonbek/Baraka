@@ -13,12 +13,13 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🍱 Barakatopingni ochish", web_app=WebAppInfo(url=APP_URL))]
+        [InlineKeyboardButton(text="🍱 Baraka Topingni ochish", web_app=WebAppInfo(url=APP_URL))]
     ])
     
     await message.answer(
-        "Assalomu alaykum! Barakatoping botiga xush kelibsiz. \n\n"
-        "Biz bilan isrofga qarshi kurashing va mazali taomlarni arzon narxlarda harid qiling.",
+        "Assalomu alaykum! Baraka Toping botiga xush kelibsiz. \n\n"
+        "Baraka isrof qilingan joydan qochadi. \n"
+        "Biz bilan mazzali taomlarni arzon narxlarda xarid qiling.",
         reply_markup=keyboard
     )
     with open("backend/bot.log", "a") as f:

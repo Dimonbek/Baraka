@@ -110,10 +110,10 @@ function Home() {
       <header className="mb-8 flex justify-between items-center">
         <div>
            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-             Barakatoping
+             Baraka Toping
            </h1>
            <p className="text-tg-hint text-[11px] font-medium uppercase tracking-[0.1em] opacity-80 mt-1">
-             Isrofga qarshi harakat
+             Baraka isrof qilingan joydan qochadi.
            </p>
         </div>
         <button 

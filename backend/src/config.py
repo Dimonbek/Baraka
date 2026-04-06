@@ -4,11 +4,14 @@ from dotenv import load_dotenv
 # Load relative to repo root
 load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
 
+# --- App Settings ---
+APP_ENV = os.getenv("APP_ENV", "production")
+
 # --- Telegram Settings ---
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 NGROK_URL = os.getenv("NGROK_URL", "")
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://baraka-nu.vercel.app")
 # The bot button should point to the frontend (Vercel), not the backend API
 APP_URL = FRONTEND_URL or RENDER_URL or f"https://{NGROK_URL}"
 

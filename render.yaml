@@ -2,6 +2,7 @@ services:
   - type: web
     name: barakatoping-backend
     env: python
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: python -m backend.src.main
     envVars:
@@ -16,6 +17,7 @@ services:
   - type: web
     name: barakatoping-frontend
     env: static
+    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     headers:

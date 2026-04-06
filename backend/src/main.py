@@ -163,11 +163,13 @@ def get_dishes(lat: float = None, lng: float = None, db: Session = Depends(get_d
 
 @app.get("/api/v1/buyer/orders")
 def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    now = datetime.now()
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
     orders = db.query(models.Order).filter(models.Order.buyer_id == current_user.id).order_by(models.Order.created_at.desc()).all()
     
     result = []
     for order in orders:
+        # created_at is aware because of timezone=True in models
         elapsed = (now - order.created_at).total_seconds()
         remaining = 1800 - elapsed # 30 min expiration window
         
@@ -183,6 +185,7 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
         else:
             if order.status == 'pending':
                 order.status = 'expired'
+                db.add(order)
                 db.commit()
             result.append({
                 "id": order.id,
@@ -205,7 +208,9 @@ def add_favorite(restaurant_id: int, db: Session = Depends(get_db), current_user
     if not restaurant: raise HTTPException(status_code=404, detail="Restoran topilmadi")
     if restaurant not in current_user.favorite_restaurants:
         current_user.favorite_restaurants.append(restaurant)
+        db.add(current_user)
         db.commit()
+        db.refresh(current_user)
     return {"status": "success"}
 
 @app.delete("/api/v1/favorites/{restaurant_id}")
@@ -214,7 +219,9 @@ def remove_favorite(restaurant_id: int, db: Session = Depends(get_db), current_u
     if not restaurant: raise HTTPException(status_code=404, detail="Restoran topilmadi")
     if restaurant in current_user.favorite_restaurants:
         current_user.favorite_restaurants.remove(restaurant)
+        db.add(current_user)
         db.commit()
+        db.refresh(current_user)
     return {"status": "success"}
 
 # --- Seller Endpoints ---

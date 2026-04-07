@@ -31,13 +31,14 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('category', category);
-    formData.append('original_price', price);
-    formData.append('discount_price', discount);
-    formData.append('quantity', quantity);
-    // Convert File to Blob to bypass Android Telegram WebView security URI strictness
-    const arrayBuffer = await image.arrayBuffer();
-    const imageBlob = new Blob([arrayBuffer], { type: image.type });
-    formData.append('image', imageBlob, image.name);
+    formData.append('original_price', price.toString());
+    formData.append('discount_price', discount.toString());
+    formData.append('quantity', quantity.toString());
+    
+    // Use the original image file directly if possible, or fallback to blob
+    if (image) {
+      formData.append('image', image, image.name);
+    }
 
     try {
       await api.post('/api/v1/seller/dishes', formData);

@@ -46,7 +46,7 @@ async def set_user_menu_button(user_id: int):
         await bot.set_chat_menu_button(
             chat_id=user_id,
             menu_button=MenuButtonWebApp(
-                text="🍱 Baraka Toping",
+                text="🍱 Uvol Bo'lmasin",
                 web_app=WebAppInfo(url=APP_URL)
             )
         )
@@ -57,44 +57,35 @@ async def set_user_menu_button(user_id: int):
 async def start_cmd(message: types.Message, state: FSMContext):
     user = get_current_db_user(message.from_user.id)
     
-    # Check if user already fully registered (both name and phone)
+    # Check if user already fully registered
     if user and user.full_name and user.phone_number and len(user.phone_number) > 5:
         await set_user_menu_button(message.from_user.id)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🍱 Baraka Topingni ochish", web_app=WebAppInfo(url=APP_URL))]
+            [InlineKeyboardButton(text="🍱 Uvol Bo'lmasinni ochish", web_app=WebAppInfo(url=APP_URL))]
         ])
         await message.answer(
             f"Assalomu alaykum, {user.full_name}! Botga xush kelibsiz. \n\n"
-            "Baraka isrof qilingan joydan qochadi. \n"
+            "Isrofni to'xtating, barakani toping — kechki chegirmalar endi bir joyda! \n\n"
             "Pastdagi tugma orqali ilovani ochishingiz mumkin.",
             reply_markup=keyboard
         )
         return
 
-    # VERY IMPORTANT: For non-registered users, RESET their menu button to default (hides it)
-    # We try both setting to default and explicitly removing any chat menu button
+    # Reset any existing menu button for non-registered users
     try:
         from aiogram.types import MenuButtonDefault
         await bot.set_chat_menu_button(chat_id=message.from_user.id, menu_button=MenuButtonDefault())
-        # Just in case, refresh the command list which can also trigger menu refresh
-        await bot.delete_my_commands(scope=types.BotCommandScopeChat(chat_id=message.from_user.id))
     except Exception as e:
-        print(f" [BOT DEBUG] Could not reset menu button for {message.from_user.id}: {e}")
+        print(f" [BOT DEBUG] Could not reset menu button: {e}")
 
-    # If NOT fully registered, clear existing state and START fresh
     await state.clear()
     await message.answer(
-        "Assalomu alaykum! Baraka Toping botiga xush kelibsiz. \n\n"
-        "Baraka isrof qilingan joydan qochadi. \n\n"
+        "Assalomu alaykum! \"Uvol Bo'lmasin\" botiga xush kelibsiz. \n\n"
+        "Isrofni to'xtating, barakani toping — kechki chegirmalar endi bir joyda! \n\n"
         "Ilovadan foydalanish uchun ro'yxatdan o'tishingiz shart. \n"
-        "Iltimos, ismingizni kiriting:"
+        "Iltimos, ismingiz va familiyangizni kiriting:"
     )
     await state.set_state(RegStates.waiting_for_name)
-
-@dp.message(Command("reset"))
-async def reset_cmd(message: types.Message, state: FSMContext):
-    await state.clear()
-    await message.answer("Ro'yxatdan o'tish holati bekor qilindi. Qaytadan boshlash uchun /start bosing.")
 
 @dp.message(RegStates.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext):
@@ -108,7 +99,7 @@ async def process_name(message: types.Message, state: FSMContext):
     ], resize_keyboard=True, one_time_keyboard=True)
     
     await message.answer(
-        f"Raxmat, {message.text}! Endi telefon raqamingizni yuboring (Tugmani bosing yoki +998... formatida yozing):",
+        f"Rahmat, {message.text}! Endi telefon raqamingizni yuboring (Tugmani bosing yoki +998... formatida yozing):",
         reply_markup=phone_keyboard
     )
     await state.set_state(RegStates.waiting_for_phone)
@@ -122,10 +113,7 @@ async def process_phone(message: types.Message, state: FSMContext):
     elif message.text:
         phone = message.text
     
-    # Advanced cleaning
     clean_phone = "".join(filter(str.isdigit, phone))
-    
-    # Convert local format to international if starts with 90, 91, etc. (9 digits)
     if len(clean_phone) == 9:
         clean_phone = "998" + clean_phone
     
@@ -140,12 +128,12 @@ async def process_phone(message: types.Message, state: FSMContext):
     await set_user_menu_button(message.from_user.id)
 
     webapp_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🍱 Baraka Topingni ochish", web_app=WebAppInfo(url=APP_URL))]
+        [InlineKeyboardButton(text="🍱 Uvol Bo'lmasinni ochish", web_app=WebAppInfo(url=APP_URL))]
     ])
     
     await message.answer(
-        "Muvaffaqiyatli ro'yxatga olindingiz! 🎉 \n\n"
-        "Endi Baraka Toping ilovasidan to'liq foydalanishingiz mumkin.",
+        "Muvaffaqiyatli ro'yxatdan o'tdingiz! 🎉 \n\n"
+        "Endi \"Uvol Bo'lmasin\" ilovasidan to'liq foydalanishingiz mumkin.",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer("Ilovani ochish:", reply_markup=webapp_keyboard)

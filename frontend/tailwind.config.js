@@ -7,6 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        'primary': '#10b981',
+        'accent': '#f59e0b',
         'tg-bg': 'var(--tg-theme-bg-color)',
         'tg-text': 'var(--tg-theme-text-color)',
         'tg-hint': 'var(--tg-theme-hint-color)',

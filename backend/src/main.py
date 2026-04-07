@@ -503,15 +503,15 @@ async def startup_event():
 
     seeder.seed_data()
     
-    # RADICAL RESET of global menu button to hide it for everyone by default
+    # Set global menu button to the live application URL
     try:
-        from aiogram.types import MenuButtonDefault
-        await bot.bot.set_chat_menu_button(menu_button=MenuButtonDefault())
-        print(" [BOT CONFIG] Global Menu Button RESET to Default (Hidden)")
+        from aiogram.types import MenuButtonWebApp, WebAppInfo
+        await bot.bot.set_chat_menu_button(menu_button=MenuButtonWebApp(text="Ochish", web_app=WebAppInfo(url=config.APP_URL)))
+        print(f" [BOT CONFIG] Global Menu Button Set to {config.APP_URL}")
         # Also delete global commands just in case they trigger anything
         await bot.bot.delete_my_commands()
     except Exception as e:
-        print(f" [BOT ERROR] Could not RESET global menu button: {e}")
+        print(f" [BOT ERROR] Could not set global menu button: {e}")
 
     # Run bot and tasks
     asyncio.create_task(bot.run_bot())

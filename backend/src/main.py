@@ -31,7 +31,11 @@ app.add_middleware(
     allow_origins=[
         "https://baraka-nu.vercel.app",
         "https://baraka-vlycl5idb-dilmurodnextday-4148s-projects.vercel.app",
+        "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
         "https://barakatoping-backend.onrender.com"
     ], 
     allow_credentials=True,
@@ -195,38 +199,33 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
     orders = db.query(models.Order).filter(models.Order.buyer_id == current_user.id).order_by(models.Order.created_at.desc()).all()
     
     result = []
+    print(f" [DB DEBUG] User {current_user.id} requested orders. Total in DB: {len(orders)}")
     for order in orders:
-        # created_at is aware because of timezone=True in models
-        elapsed = (now - order.created_at).total_seconds()
-        # Use order.pickup_time or default to 1800s (30m)
+        # Safe datetime calculation treating DB naive dates as UTC
+        order_time = order.created_at
+        if order_time.tzinfo is None:
+            order_time = order_time.replace(tzinfo=timezone.utc)
+            
+        elapsed = (now - order_time).total_seconds()
         max_duration = (order.pickup_time or 30) * 60
         remaining = max_duration - elapsed 
         
-        if remaining > 0 and order.status == 'pending':
-            result.append({
-                "id": order.id,
-                "dish_id": order.dish_id,
-                "dish_name": order.dish.name,
-                "verification_code": order.verification_code,
-                "status": order.status,
-                "remaining_seconds": int(remaining),
-                "created_at": order.created_at.isoformat()
-            })
-        else:
-            if order.status == 'pending':
-                order.status = 'expired'
-                db.add(order)
-                db.commit()
-            result.append({
-                "id": order.id,
-                "dish_id": order.dish_id,
-                "dish_name": order.dish.name,
-                "verification_code": "---",
-                "status": order.status,
-                "remaining_seconds": 0,
-                "created_at": order.created_at.isoformat()
-            })
-            
+        # Determine status update if pending but time is out
+        current_status = order.status
+        if remaining <= 0 and current_status == 'pending':
+            current_status = 'expired'
+            order.status = 'expired'
+            db.commit()
+
+        result.append({
+            "id": order.id,
+            "dish_id": order.dish_id,
+            "dish_name": order.dish.name,
+            "verification_code": order.verification_code if current_status == 'pending' else "---",
+            "status": current_status,
+            "remaining_seconds": max(0, int(remaining)),
+            "created_at": order.created_at.isoformat()
+        })
     return result
 
 @app.get("/api/v1/favorites")
@@ -358,13 +357,20 @@ def register_seller(
     if existing:
         raise HTTPException(status_code=400, detail="Sizda allaqachon restoran ro'yxatdan o'tgan.")
 
+    # Robust lat/lng conversion
+    f_lat, f_lng = None, None
+    try:
+        if lat: f_lat = float(lat)
+        if lng: f_lng = float(lng)
+    except: pass
+
     new_restaurant = models.Restaurant(
         owner_id=current_user.id,
         name=name,
         address=address,
-        latitude=str(lat) if lat else None,
-        longitude=str(lng) if lng else None,
-        status="active" # In real app could be 'pending'
+        latitude=f_lat,
+        longitude=f_lng,
+        status="active" 
     )
     
     current_user.role = "seller"
@@ -381,8 +387,14 @@ def get_seller_orders(db: Session = Depends(get_db), current_user: models.User =
     
     result = []
     for order in orders:
-        # Calculate remaining time
-        remaining = order.pickup_time * 60 - (datetime.now(order.created_at.tzinfo) - order.created_at).total_seconds()
+        # Safe datetime calculation
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        order_time = order.created_at
+        if order_time.tzinfo is None:
+            order_time = order_time.replace(tzinfo=timezone.utc)
+            
+        remaining = order.pickup_time * 60 - (now - order_time).total_seconds()
         
         result.append({
             "id": order.id,

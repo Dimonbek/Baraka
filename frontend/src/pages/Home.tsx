@@ -58,7 +58,6 @@ function Home() {
       setDishes(data);
     } catch (err: any) {
       setError(err.message || true);
-      // Removed redundant toast to prevent spamming
     } finally {
       setLoading(false);
     }
@@ -90,14 +89,13 @@ function Home() {
         toast.success("Saralanganlardan olib tashlandi");
       } else {
         await api.post(`/api/v1/favorites/${dish.restaurant_id}`);
-        toast.success("Saralanganlarga qo'shildi");
       }
       setDishes(prev => prev.map(d => 
         d.restaurant_id === dish.restaurant_id ? { ...d, is_favorite: !dish.is_favorite } : d
       ));
     } catch (err: any) {
-      toast.error(err.message || "Xatolik yuz berdi");
-    }
+      console.warn("Cart fetch failed:", err.message);
+    } finally { };
   };
 
   return (
@@ -168,11 +166,19 @@ function Home() {
         <div className="grid gap-4">
            {[1, 2, 3].map(i => <div key={i} className="h-28 glass-card animate-pulse" />)}
         </div>
-      ) : dishes.filter(d => selectedCategory === 'Hammasi' || d.category === selectedCategory).length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-4xl mb-4">🍽️</div>
-          <p className="text-tg-hint font-medium italic opacity-50">{t('no_offers')}</p>
-        </div>
+      ) : dishes.length === 0 ? (
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="py-20 px-8 text-center glass-card border-white/5 relative overflow-hidden"
+        >
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
+          <div className="text-6xl mb-6">🍽️</div>
+          <h2 className="text-xl font-bold mb-3">Harakatsiz oshxona</h2>
+          <p className="text-tg-hint text-sm mb-4 leading-relaxed italic">
+            Hali hech qanday chegirmali taomlar yo'q. Tez orada yangi takliflar paydo bo'ladi!
+          </p>
+        </motion.div>
       ) : (
         <div className="grid gap-4">
           {dishes
@@ -287,7 +293,7 @@ function Home() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => { setBookingStatus(null); setSelectedDish(null); navigate('/orders'); }} 
+                  onClick={() => { setBookingStatus(null); setSelectedDish(null); navigate('/cart'); }} 
                   className="w-full bg-white text-slate-950 py-4 rounded-2xl font-bold active:scale-95 transition-all"
                 >
                   Yopish

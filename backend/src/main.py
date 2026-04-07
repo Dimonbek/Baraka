@@ -20,8 +20,8 @@ from . import models, schemas, tasks, bot, seeder, config
 
 # FastAPI app initialization
 app = FastAPI(
-    title="Baraka Toping API", 
-    description="Food Rescue Platform for Telegram Web Apps - Baraka isrof qilingan joydan qochadi.", 
+    title="Uvol Bo'lmasin API", 
+    description="Food Rescue Platform — Isrofni to'xtating, barakani toping!", 
     version="2.0.0"
 )
 
@@ -298,20 +298,28 @@ async def create_dish(
 
 @app.get("/api/v1/seller/analytics")
 def get_seller_analytics(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    from sqlalchemy import func
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
-    if not restaurant: return {"total_dishes": 0, "total_orders": 0, "total_revenue": 0, "active_dishes": 0}
+    try:
+        from sqlalchemy import func
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant: 
+            return {"total_dishes": 0, "total_orders": 0, "total_revenue": 0.0, "active_dishes": 0}
 
-    total_dishes = db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).count()
-    total_orders = db.query(models.Order).join(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).count()
-    total_revenue = db.query(func.sum(models.Dish.discount_price)).join(models.Order).filter(models.Dish.restaurant_id == restaurant.id).scalar() or 0
-    
-    return {
-        "total_dishes": total_dishes,
-        "total_orders": total_orders,
-        "total_revenue": float(total_revenue),
-        "active_dishes": db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id, models.Dish.status == 'active').count()
-    }
+        total_dishes = db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).count()
+        total_orders = db.query(models.Order).join(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).count()
+        
+        # Safe revenue calculation
+        rev_query = db.query(func.sum(models.Dish.discount_price)).join(models.Order).filter(models.Dish.restaurant_id == restaurant.id).scalar()
+        total_revenue = float(rev_query) if rev_query is not None else 0.0
+        
+        return {
+            "total_dishes": total_dishes,
+            "total_orders": total_orders,
+            "total_revenue": total_revenue,
+            "active_dishes": db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id, models.Dish.status == 'active').count()
+        }
+    except Exception as e:
+        print(f" [DB ERROR] Analytics failed: {e}")
+        return {"total_dishes": 0, "total_orders": 0, "total_revenue": 0.0, "active_dishes": 0}
 
 @app.get("/api/v1/seller/dishes/all")
 def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):

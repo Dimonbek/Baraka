@@ -155,12 +155,16 @@ function Home() {
       </div>
 
       {error ? (
-        <div className="py-20 text-center flex flex-col items-center px-4 bento-card border-red-500/10 bg-red-500/5">
-           <AlertCircle size={48} className="text-red-500/30 mb-4" />
-           <p className="text-tg-hint font-bold mb-6 text-center text-sm uppercase tracking-widest italic opacity-60">
-             Server bilan bog'lanishda muammo yuz berdi.
+        <div className="py-24 px-8 text-center bento-card border-white/5 relative overflow-hidden bg-white/[0.01]">
+           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
+           <div className="text-6xl mb-8 opacity-30">🥣</div>
+           <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter italic">Hozircha taomlar yo'q</h2>
+           <p className="text-tg-hint text-xs mb-6 leading-relaxed italic opacity-50 px-4">
+             Ulanishda muammo bo'ldi yoki taomlar tugagan. Iltimos, sahifani yangilab ko'ring.
            </p>
-           <button onClick={loadDishes} className="bg-white/5 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-all active:scale-95">Qayta urinish</button>
+           <button onClick={loadDishes} className="bg-white/5 px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-all active:scale-95 shadow-xl">
+              Yangilash
+           </button>
         </div>
       ) : loading ? (
         <div className="grid gap-4">

@@ -259,8 +259,7 @@ function Home() {
                   onClick={() => handleBook(selectedDish.id)}
                   className="w-full bg-primary py-6 rounded-[28px] font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/20 active:scale-[0.97] transition-all flex items-center justify-center gap-3 group"
                 >
-                   {/* @ts-ignore */}
-                   {t('book_now')}
+                   Bron qilish
                    <ChevronRight size={20} className="group-hover:translate-x-2 transition-transform" />
                 </button>
              </motion.div>

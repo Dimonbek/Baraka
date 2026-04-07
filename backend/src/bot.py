@@ -41,17 +41,21 @@ def save_user_info(telegram_id: int, full_name: str = None, phone_number: str = 
 
 from aiogram.types import MenuButtonWebApp
 
-async def set_user_menu_button(user_id: int):
+async def set_user_menu_button(user_id: int, show: bool = True):
     try:
-        await bot.set_chat_menu_button(
-            chat_id=user_id,
-            menu_button=MenuButtonWebApp(
-                text="🍱 Uvol Bo'lmasin",
-                web_app=WebAppInfo(url=APP_URL)
+        if show:
+            await bot.set_chat_menu_button(
+                chat_id=user_id,
+                menu_button=MenuButtonWebApp(
+                    text="🍱 Uvol Bo'lmasin",
+                    web_app=WebAppInfo(url=APP_URL)
+                )
             )
-        )
+        else:
+            from aiogram.types import MenuButtonDefault
+            await bot.set_chat_menu_button(chat_id=user_id, menu_button=MenuButtonDefault())
     except Exception as e:
-        print(f" [DB DEBUG] Menu button set for {user_id} failed: {e}")
+        print(f" [BOT DEBUG] Menu button update for {user_id} failed: {e}")
 
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message, state: FSMContext):
@@ -59,7 +63,7 @@ async def start_cmd(message: types.Message, state: FSMContext):
     
     # Check if user already fully registered
     if user and user.full_name and user.phone_number and len(user.phone_number) > 5:
-        await set_user_menu_button(message.from_user.id)
+        await set_user_menu_button(message.from_user.id, show=True)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🍱 Uvol Bo'lmasinni ochish", web_app=WebAppInfo(url=APP_URL))]
         ])
@@ -71,16 +75,12 @@ async def start_cmd(message: types.Message, state: FSMContext):
         )
         return
 
-    # Reset any existing menu button for non-registered users
-    try:
-        from aiogram.types import MenuButtonDefault
-        await bot.set_chat_menu_button(chat_id=message.from_user.id, menu_button=MenuButtonDefault())
-    except Exception as e:
-        print(f" [BOT DEBUG] Could not reset menu button: {e}")
+    # FOR UNREGISTERED USERS: Explicitly hide the menu button
+    await set_user_menu_button(message.from_user.id, show=False)
 
     await state.clear()
     await message.answer(
-        "Assalomu alaykum! \"Uvol Bo'lmasin\" botiga xush kelibsiz. \n\n"
+        "Assalomu alaykum! \"Uvol Bo'lmasin\" botiga xush kelibsiz. 🍱✨\n\n"
         "Isrofni to'xtating, barakani toping — kechki chegirmalar endi bir joyda! \n\n"
         "Ilovadan foydalanish uchun ro'yxatdan o'tishingiz shart. \n"
         "Iltimos, ismingiz va familiyangizni kiriting:"

@@ -25,20 +25,11 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for frontend - IMPORTANT: DO NOT use "*" with allow_credentials=True
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://baraka-nu.vercel.app",
-        "https://baraka-vlycl5idb-dilmurodnextday-4148s-projects.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "https://barakatoping-backend.onrender.com"
-    ], 
-    allow_credentials=True,
+    allow_origins=["*"], 
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -123,6 +123,28 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Ma'lumotlarni tahlil qilishda xato: {str(e)}")
 
+@app.get("/api/v1/user/me")
+def get_me(current_user: models.User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "telegram_id": current_user.telegram_id,
+        "full_name": current_user.full_name,
+        "phone_number": current_user.phone_number,
+        "role": current_user.role
+    }
+
+@app.post("/api/v1/user/update")
+def update_profile(
+    full_name: str = Form(None),
+    phone_number: str = Form(None),
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    if full_name: current_user.full_name = full_name
+    if phone_number: current_user.phone_number = phone_number
+    db.commit()
+    return {"status": "success"}
+
 # --- Endpoints ---
 
 @app.get("/health")

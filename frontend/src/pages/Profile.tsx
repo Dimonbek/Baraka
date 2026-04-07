@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { User, Globe, Phone, ChevronRight, Store, ShieldCheck, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
+import { api } from '../services/api'
 import { useTranslation } from '../i18n'
 
 function Profile() {
@@ -15,8 +16,19 @@ function Profile() {
     const tg = (window as any).Telegram.WebApp;
     if (tg.initDataUnsafe?.user) {
       setTgUser(tg.initDataUnsafe.user);
-      setName(tg.initDataUnsafe.user.first_name + (tg.initDataUnsafe.user.last_name ? ' ' + tg.initDataUnsafe.user.last_name : ''));
     }
+    
+    // Fetch real profile from backend
+    const fetchMe = async () => {
+      try {
+        const data = await api.get<any>('/api/v1/user/me');
+        if (data.full_name) setName(data.full_name);
+        if (data.phone_number) setPhone(data.phone_number);
+      } catch (err) {
+        console.error("Profile load failed", err);
+      }
+    };
+    fetchMe();
   }, []);
 
   const changeLanguage = (newLang: string) => {
@@ -24,9 +36,16 @@ function Profile() {
     toast.success("Til o'zgartirildi!");
   };
 
-  const saveProfile = () => {
-    localStorage.setItem('user_phone', phone);
-    toast.success("Ma'lumotlar saqlandi!");
+  const saveProfile = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('full_name', name);
+      formData.append('phone_number', phone);
+      await api.post('/api/v1/user/update', formData);
+      toast.success("Ma'lumotlar saqlandi!");
+    } catch (err) {
+      toast.error("Saqlashda xatolik yuz berdi");
+    }
   };
 
   return (

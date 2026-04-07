@@ -58,7 +58,7 @@ function Home() {
       setDishes(data);
     } catch (err) {
       setError(true);
-      toast.error("Ma'lumotlarni yuklashda xatolik!");
+      // Removed redundant toast to prevent spamming
     } finally {
       setLoading(false);
     }
@@ -132,20 +132,20 @@ function Home() {
         </button>
       </header>
 
-      {/* Categories Grid - Fitting on one screen */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-8">
+      {/* Categories Horizontal - Super Compact */}
+      <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-6 pb-1">
         {categories.map((cat) => (
           <button
             key={cat.name}
             onClick={() => setSelectedCategory(cat.name)}
-            className={`flex flex-col items-center justify-center py-4 px-2 rounded-2xl transition-all duration-300 ${
+            className={`flex items-center gap-1 py-1.5 px-3 rounded-full whitespace-nowrap transition-all duration-300 border ${
               selectedCategory === cat.name
-                ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-105 z-10'
-                : 'bg-white/5 text-tg-hint border border-white/5 hover:bg-white/10'
+                ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105 z-10'
+                : 'bg-white/5 text-tg-hint border-white/5 opacity-60'
             }`}
           >
-            <span className="text-2xl mb-1">{cat.icon}</span>
-            <span className="text-[9px] font-black uppercase tracking-tighter text-center leading-none">
+            <span className="text-sm">{cat.icon}</span>
+            <span className="text-[9px] font-black uppercase tracking-tight">
               {/* @ts-ignore */}
               {t(cat.labelId as any)}
             </span>

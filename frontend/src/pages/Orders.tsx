@@ -22,7 +22,7 @@ function Orders() {
       setOrders(data);
     } catch (err) {
       setError(true);
-      toast.error("Buyurtmalarni yuklab bo'lmadi");
+      // Removed toast to prevent spamming
     } finally {
       setLoading(false);
     }

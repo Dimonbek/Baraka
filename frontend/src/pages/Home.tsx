@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import type { Dish } from '../types'
 import { DishCard } from '../components/DishCard'
+import { EmptyState } from '../components/EmptyState'
 import { useTranslation } from '../i18n'
 
 function Home() {
@@ -155,34 +156,21 @@ function Home() {
       </div>
 
       {error ? (
-        <div className="py-24 px-8 text-center bento-card border-white/5 relative overflow-hidden bg-white/[0.01]">
-           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
-           <div className="text-6xl mb-8 opacity-30">🥣</div>
-           <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter italic">Hozircha taomlar yo'q</h2>
-           <p className="text-tg-hint text-xs mb-6 leading-relaxed italic opacity-50 px-4">
-             Ulanishda muammo bo'ldi yoki taomlar tugagan. Iltimos, sahifani yangilab ko'ring.
-           </p>
-           <button onClick={loadDishes} className="bg-white/5 px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-all active:scale-95 shadow-xl">
-              Yangilash
-           </button>
-        </div>
+        <EmptyState 
+          title="Hozircha taomlar yo'q"
+          description="Ulanishda muammo bo'ldi yoki taomlar tugagan. Iltimos, sahifani yangilab ko'ring."
+          actionLabel="Yangilash"
+          onAction={loadDishes}
+        />
       ) : loading ? (
         <div className="grid gap-4">
            {[1, 2, 3].map(i => <div key={i} className="h-28 bento-card animate-pulse bg-white/[0.02]" />)}
         </div>
-      ) : dishes.length === 0 ? (
-        <motion.div 
-           initial={{ opacity: 0, scale: 0.95 }}
-           animate={{ opacity: 1, scale: 1 }}
-           className="py-24 px-8 text-center bento-card border-white/5 relative overflow-hidden"
-        >
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
-          <div className="text-6xl mb-8 opacity-30 grayscale">🥣</div>
-          <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter italic">Hozircha taomlar yo'q</h2>
-          <p className="text-tg-hint text-xs mb-4 leading-relaxed italic opacity-50 px-4">
-            Ayni damda hech qanday chegirmali taomlar qo'shilmagan. Yangi takliflar paydo bo'lishi bilan shu yerda ko'rinadi!
-          </p>
-        </motion.div>
+      ) : (dishes.filter(d => selectedCategory === 'Hammasi' || d.category === selectedCategory)).length === 0 ? (
+        <EmptyState 
+          title="Taomlar topilmadi"
+          description="Tanlangan turdagi chegirmali taomlar hozircha yo'q. Boshqa toifani ko'rib ko'ring."
+        />
       ) : (
         <div className="grid gap-4">
           {dishes

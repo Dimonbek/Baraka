@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import type { SellerProfile, Analytics, Dish } from '../types'
 import { StatCard } from '../components/StatCard'
+import { EmptyState } from '../components/EmptyState'
 import { SellerRegistration } from '../components/SellerRegistration'
 import { AddDishForm } from '../components/AddDishForm'
 import { useTranslation } from '../i18n'
@@ -70,8 +71,19 @@ function Seller() {
      )
   }
 
+  if (error) {
+    return (
+      <EmptyState 
+        title="Ulanishda muammo"
+        description="Profil ma'lumotlarini yuklab bo'lmadi. Iltimos, internetingizni tekshirib qayta urinib ko'ring."
+        actionLabel="Qayta urinish"
+        onAction={fetchProfile}
+      />
+    )
+  }
+
   // --- Render Onboarding View if Not a Seller ---
-  if (!isSeller) {
+  if (isSeller === false) {
     return <SellerRegistration onSuccess={fetchProfile} />
   }
 
@@ -168,7 +180,11 @@ function Seller() {
           </h2>
           <div className="grid gap-3">
             {myDishes.length === 0 ? (
-              <div className="py-16 text-center bento-card opacity-30 italic text-sm">{t('no_offers')}</div>
+              <EmptyState 
+                title="Hali taom yo'q"
+                description="Siz hali birorta ham chegirmali taklif qo'shmagansiz. Yuqoridagi formadan boshlang!"
+                icon="🥡"
+              />
             ) : (
               myDishes.map((dish, i) => (
                 <motion.div 

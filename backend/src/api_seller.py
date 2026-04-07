@@ -6,9 +6,9 @@ import os
 import shutil
 from typing import Optional
 
-from . import models, schemas, database, auth, config
-from .database import get_db
-from .auth import get_current_user
+import models, schemas, database, auth, config
+from database import get_db
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/seller", tags=["seller"])
 

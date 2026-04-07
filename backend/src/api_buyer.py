@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from . import models, schemas, database, auth
-from .database import get_db
-from .auth import get_current_user
+import models, schemas, database, auth
+from database import get_db
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/buyer", tags=["buyer"])
 

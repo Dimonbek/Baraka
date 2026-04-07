@@ -102,18 +102,21 @@ function Home() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="pb-24"
     >
-      <header className="mb-8 flex justify-between items-center">
+      <header className="mb-8 flex justify-between items-center py-4">
         <div>
-           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+           <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent uppercase py-1">
              Baraka Toping
            </h1>
-           <p className="text-tg-hint text-[11px] font-medium uppercase tracking-[0.1em] opacity-80 mt-1">
-             Baraka isrof qilingan joydan qochadi.
-           </p>
+           <div className="flex items-center gap-2 mt-1">
+             <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+             <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+               Baraka isrof qilingan joydan qochadi
+             </p>
+           </div>
         </div>
         <button 
           onClick={async () => {
@@ -121,31 +124,31 @@ function Home() {
               const data = await api.get<any[]>('/api/v1/notifications');
               setNotifications(data);
               setShowNotifications(true);
-            } catch { toast.error("Xabarlarni yuklab bo'lmadi"); }
+            } catch { /* Silent */ }
           }}
-          className="relative glass-card w-12 h-12 flex items-center justify-center border-white/10 active:scale-95"
+          className="relative glass-card w-14 h-14 flex items-center justify-center border-white/10 active:scale-95 shadow-2xl"
         >
-          <Bell size={20} className="text-white/80" />
+          <Bell size={22} className="text-white/80" />
           {notifications.some(n => !n.is_read) && (
-            <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-primary rounded-full border-2 border-slate-900 shadow-sm animate-pulse" />
+            <span className="absolute top-4 right-4 w-2.5 h-2.5 bg-primary rounded-full border-2 border-[#020617] shadow-sm animate-pulse" />
           )}
         </button>
       </header>
 
-      {/* Categories Horizontal - Super Compact */}
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-6 pb-1">
+      {/* Categories Horizontal - Super Compact & Premium */}
+      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-2">
         {categories.map((cat) => (
           <button
             key={cat.name}
             onClick={() => setSelectedCategory(cat.name)}
-            className={`flex items-center gap-1 py-1.5 px-3 rounded-full whitespace-nowrap transition-all duration-300 border ${
+            className={`flex items-center gap-2 py-3 px-5 rounded-2xl whitespace-nowrap transition-all duration-500 border ${
               selectedCategory === cat.name
-                ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105 z-10'
-                : 'bg-white/5 text-tg-hint border-white/5 opacity-60'
+                ? 'bg-primary text-white border-primary shadow-2xl shadow-primary/30 scale-105 z-10 font-black'
+                : 'bg-white/[0.02] text-tg-hint border-white/[0.05] font-bold opacity-60 hover:bg-white/[0.05]'
             }`}
           >
-            <span className="text-sm">{cat.icon}</span>
-            <span className="text-[9px] font-black uppercase tracking-tight">
+            <span className="text-xl">{cat.icon}</span>
+            <span className="text-[10px] uppercase tracking-widest leading-none">
               {/* @ts-ignore */}
               {t(cat.labelId as any)}
             </span>
@@ -191,7 +194,7 @@ function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-end justify-center z-[60] p-4"
+            className="fixed inset-0 bg-[#020617]/90 backdrop-blur-3xl flex items-end justify-center z-[60]"
             onClick={() => setSelectedDish(null)}
           >
              <motion.div 
@@ -199,44 +202,43 @@ function Home() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-slate-900 w-full max-w-sm rounded-[32px] p-8 pb-12 border border-white/10 relative shadow-2xl"
+                className="bg-[#020617] w-full max-w-sm rounded-t-[48px] p-10 pb-16 border-t border-white/5 relative shadow-2xl"
                 onClick={e => e.stopPropagation()}
              >
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 cursor-grab" onClick={() => setSelectedDish(null)} />
-                <div className="relative h-56 rounded-3xl overflow-hidden mb-6 group">
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-10 cursor-grab" onClick={() => setSelectedDish(null)} />
+                
+                <div className="relative h-64 rounded-[40px] overflow-hidden mb-10 group shadow-2xl">
                    <img src={selectedDish.image_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-                   <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                      <div>
-                        <h2 className="text-2xl font-bold">{selectedDish.name}</h2>
-                        <span className="text-primary text-sm font-medium">{selectedDish.restaurant_name}</span>
-                      </div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+                   <div className="absolute bottom-6 left-6">
+                      <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">{selectedDish.restaurant_name}</span>
+                      <h2 className="text-3xl font-black gradient-text tracking-tighter uppercase">{selectedDish.name}</h2>
                    </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-10">
                    <div className="flex flex-col">
-                      <span className="text-tg-hint line-through text-sm">{selectedDish.original_price.toLocaleString()} so'm</span>
-                      <span className="text-3xl font-black">{selectedDish.discount_price.toLocaleString()} so'm</span>
+                      <span className="text-tg-hint/30 line-through text-sm font-bold">{selectedDish.original_price.toLocaleString()} s.</span>
+                      <span className="text-4xl font-black tracking-tighter">{selectedDish.discount_price.toLocaleString()} <span className="text-xs text-primary font-black uppercase">so'm</span></span>
                    </div>
-                   <div className="flex items-center gap-5 glass-card bg-white/5 border-white/5 p-2 rounded-2xl ring-1 ring-white/10">
-                      <button onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-white/50 active:scale-90"><Minus size={16}/></button>
-                      <span className="text-xl font-black w-4 text-center">{orderQuantity}</span>
-                      <button onClick={() => setOrderQuantity(Math.min(selectedDish.quantity, orderQuantity + 1))} className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white active:scale-90 shadow-md shadow-primary/20"><Plus size={16}/></button>
+                   <div className="flex items-center gap-6 bento-card p-2 px-4 rounded-3xl bg-white/[0.03]">
+                      <button onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))} className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-white/50 active:scale-90 hover:bg-white/10 transition-all"><Minus size={18}/></button>
+                      <span className="text-2xl font-black w-6 text-center">{orderQuantity}</span>
+                      <button onClick={() => setOrderQuantity(Math.min(selectedDish.quantity, orderQuantity + 1))} className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white active:scale-90 shadow-xl shadow-primary/30"><Plus size={18}/></button>
                    </div>
                 </div>
 
-                <div className="mb-8">
-                   <div className="text-[10px] text-tg-hint font-bold uppercase tracking-widest mb-3">Olib ketish vaqti (daqiqa)</div>
-                   <div className="grid grid-cols-4 gap-2">
+                <div className="mb-10">
+                   <div className="text-[10px] text-tg-hint/40 font-black uppercase tracking-[0.3em] mb-4 px-2">Kutish vaqti (daqiqa)</div>
+                   <div className="grid grid-cols-4 gap-3">
                       {[15, 30, 45, 60].map(time => (
                          <button 
                             key={time}
                             onClick={() => setPickupTime(time)}
-                            className={`py-3 rounded-xl font-bold text-sm transition-all ${
+                            className={`py-4 rounded-2xl font-black text-xs transition-all duration-300 border ${
                                pickupTime === time 
-                               ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                               : 'bg-white/5 text-tg-hint border border-white/5 hover:bg-white/10'
+                               ? 'bg-primary text-white border-primary shadow-2xl shadow-primary/20 scale-105' 
+                               : 'bg-white/[0.02] text-tg-hint/40 border-white/[0.05] hover:bg-white/5'
                             }`}
                          >
                             {time}
@@ -247,10 +249,10 @@ function Home() {
 
                 <button 
                   onClick={() => handleBook(selectedDish.id)}
-                  className="w-full bg-primary py-5 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                  className="w-full bg-primary py-6 rounded-[28px] font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/20 active:scale-[0.97] transition-all flex items-center justify-center gap-3 group"
                 >
-                   Bron qilish
-                   <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                   {t('book_now')}
+                   <ChevronRight size={20} className="group-hover:translate-x-2 transition-transform" />
                 </button>
              </motion.div>
           </motion.div>

@@ -34,7 +34,10 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     formData.append('original_price', price);
     formData.append('discount_price', discount);
     formData.append('quantity', quantity);
-    formData.append('image', image);
+    // Convert File to Blob to bypass Android Telegram WebView security URI strictness
+    const arrayBuffer = await image.arrayBuffer();
+    const imageBlob = new Blob([arrayBuffer], { type: image.type });
+    formData.append('image', imageBlob, image.name);
 
     try {
       await api.post('/api/v1/seller/dishes', formData);

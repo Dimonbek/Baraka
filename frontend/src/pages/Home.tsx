@@ -155,28 +155,28 @@ function Home() {
       </div>
 
       {error ? (
-        <div className="py-20 text-center flex flex-col items-center px-4">
-           <AlertCircle size={48} className="text-red-500/50 mb-4" />
-           <p className="text-tg-hint font-medium mb-6 text-center">
-             {typeof error === 'string' ? error : t('connection_error')}
+        <div className="py-20 text-center flex flex-col items-center px-4 bento-card border-red-500/10 bg-red-500/5">
+           <AlertCircle size={48} className="text-red-500/30 mb-4" />
+           <p className="text-tg-hint font-bold mb-6 text-center text-sm uppercase tracking-widest italic opacity-60">
+             Server bilan bog'lanishda muammo yuz berdi.
            </p>
-           <button onClick={loadDishes} className="glass-card px-6 py-2 text-sm font-bold border-white/10">{t('retry')}</button>
+           <button onClick={loadDishes} className="bg-white/5 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-all active:scale-95">Qayta urinish</button>
         </div>
       ) : loading ? (
         <div className="grid gap-4">
-           {[1, 2, 3].map(i => <div key={i} className="h-28 glass-card animate-pulse" />)}
+           {[1, 2, 3].map(i => <div key={i} className="h-28 bento-card animate-pulse bg-white/[0.02]" />)}
         </div>
       ) : dishes.length === 0 ? (
         <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="py-20 px-8 text-center glass-card border-white/5 relative overflow-hidden"
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           className="py-24 px-8 text-center bento-card border-white/5 relative overflow-hidden"
         >
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
-          <div className="text-6xl mb-6">🍽️</div>
-          <h2 className="text-xl font-bold mb-3">Harakatsiz oshxona</h2>
-          <p className="text-tg-hint text-sm mb-4 leading-relaxed italic">
-            Hali hech qanday chegirmali taomlar yo'q. Tez orada yangi takliflar paydo bo'ladi!
+          <div className="text-6xl mb-8 opacity-30 grayscale">🥣</div>
+          <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter italic">Hozircha taomlar yo'q</h2>
+          <p className="text-tg-hint text-xs mb-4 leading-relaxed italic opacity-50 px-4">
+            Ayni damda hech qanday chegirmali taomlar qo'shilmagan. Yangi takliflar paydo bo'lishi bilan shu yerda ko'rinadi!
           </p>
         </motion.div>
       ) : (

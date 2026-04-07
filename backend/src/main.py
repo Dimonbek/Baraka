@@ -330,19 +330,22 @@ def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User =
 
 @app.get("/api/v1/seller/profile")
 def get_seller_profile(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
-    if not restaurant:
-        return {"is_seller": False, "restaurant": None}
-    return {
-        "is_seller": True,
-        "role": current_user.role,
-        "restaurant": {
-            "id": restaurant.id,
-            "name": restaurant.name,
-            "address": restaurant.address,
-            "status": restaurant.status
+    try:
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant:
+            return {"is_seller": False, "restaurant": None, "role": current_user.role}
+        return {
+            "is_seller": True,
+            "role": current_user.role,
+            "restaurant": {
+                "id": restaurant.id,
+                "name": restaurant.name,
+                "address": restaurant.address,
+                "status": restaurant.status
+            }
         }
-    }
+    except Exception as e:
+        return {"is_seller": False, "error": str(e)}
 
 @app.post("/api/v1/seller/register")
 def register_seller(

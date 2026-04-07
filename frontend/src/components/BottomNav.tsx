@@ -1,16 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import { Home as HomeIcon, ShoppingBag, Heart, User, Store } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useTranslation } from '../i18n'
 
 export function BottomNav() {
+  const { t } = useTranslation();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 px-4 pointer-events-none">
       <div className="flex items-center justify-around w-full max-w-sm h-16 glass-card px-4 border border-white/5 ring-1 ring-white/10 pointer-events-auto">
-        <NavItem to="/" icon={<HomeIcon size={22} />} label="Asosiy" />
-        <NavItem to="/orders" icon={<ShoppingBag size={22} />} label="Savat" />
-        <NavItem to="/favorites" icon={<Heart size={22} />} label="Saralangan" />
-        <NavItem to="/profile" icon={<User size={22} />} label="Profil" />
-        <NavItem to="/seller" icon={<Store size={22} />} label="Sotuvchi" />
+        <NavItem to="/" icon={<HomeIcon size={22} />} label={t('home')} />
+        <NavItem to="/orders" icon={<ShoppingBag size={22} />} label={t('cart')} />
+        <NavItem to="/favorites" icon={<Heart size={22} />} label={t('favorites')} />
+        <NavItem to="/profile" icon={<User size={22} />} label={t('profile')} />
+        <NavItem to="/seller" icon={<Store size={22} />} label={t('seller')} />
       </div>
     </nav>
   )

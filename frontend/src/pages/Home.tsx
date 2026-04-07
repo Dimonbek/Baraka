@@ -6,8 +6,10 @@ import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import type { Dish } from '../types'
 import { DishCard } from '../components/DishCard'
+import { useTranslation } from '../i18n'
 
 function Home() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,15 @@ function Home() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [pickupTime, setPickupTime] = useState(30);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Hammasi');
+
+  const categories = [
+    { name: 'Hammasi', labelId: 'all', icon: '🍽️' },
+    { name: 'Milliy taomlar', labelId: 'national', icon: '🍛' },
+    { name: 'Fast-fud', labelId: 'fastfood', icon: '🍔' },
+    { name: 'Shirinliklar', labelId: 'desserts', icon: '🧁' },
+    { name: 'Salatlar', labelId: 'salads', icon: '🥗' }
+  ];
 
   useEffect(() => {
     const savedLat = localStorage.getItem('user_lat');
@@ -121,32 +132,55 @@ function Home() {
         </button>
       </header>
 
+      {/* Categories Grid - Fitting on one screen */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-8">
+        {categories.map((cat) => (
+          <button
+            key={cat.name}
+            onClick={() => setSelectedCategory(cat.name)}
+            className={`flex flex-col items-center justify-center py-4 px-2 rounded-2xl transition-all duration-300 ${
+              selectedCategory === cat.name
+                ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-105 z-10'
+                : 'bg-white/5 text-tg-hint border border-white/5 hover:bg-white/10'
+            }`}
+          >
+            <span className="text-2xl mb-1">{cat.icon}</span>
+            <span className="text-[9px] font-black uppercase tracking-tighter text-center leading-none">
+              {/* @ts-ignore */}
+              {t(cat.labelId as any)}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {error ? (
         <div className="py-20 text-center flex flex-col items-center">
            <AlertCircle size={48} className="text-red-500/50 mb-4" />
-           <p className="text-tg-hint font-medium mb-6">Server bilan ulanishda xatolik</p>
-           <button onClick={loadDishes} className="glass-card px-6 py-2 text-sm font-bold border-white/10">Qayta urinish</button>
+           <p className="text-tg-hint font-medium mb-6">{t('connection_error')}</p>
+           <button onClick={loadDishes} className="glass-card px-6 py-2 text-sm font-bold border-white/10">{t('retry')}</button>
         </div>
       ) : loading ? (
         <div className="grid gap-4">
            {[1, 2, 3].map(i => <div key={i} className="h-28 glass-card animate-pulse" />)}
         </div>
-      ) : dishes.length === 0 ? (
+      ) : dishes.filter(d => selectedCategory === 'Hammasi' || d.category === selectedCategory).length === 0 ? (
         <div className="text-center py-20">
           <div className="text-4xl mb-4">🍽️</div>
-          <p className="text-tg-hint font-medium">Hozircha hech qanday taklif yo'q</p>
+          <p className="text-tg-hint font-medium italic opacity-50">{t('no_offers')}</p>
         </div>
       ) : (
         <div className="grid gap-4">
-          {dishes.map((dish, i) => (
-            <DishCard 
-              key={dish.id} 
-              dish={dish} 
-              index={i} 
-              onClick={setSelectedDish} 
-              onToggleFavorite={toggleFavorite} 
-            />
-          ))}
+          {dishes
+            .filter(d => selectedCategory === 'Hammasi' || d.category === selectedCategory)
+            .map((dish, i) => (
+              <DishCard 
+                key={dish.id} 
+                dish={dish} 
+                index={i} 
+                onClick={setSelectedDish} 
+                onToggleFavorite={toggleFavorite} 
+              />
+            ))}
         </div>
       )}
 

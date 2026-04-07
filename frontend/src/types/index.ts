@@ -2,6 +2,7 @@ export interface Dish {
   id: number;
   restaurant_name: string;
   name: string;
+  category: string;
   original_price: number;
   discount_price: number;
   pickup_start: string;
@@ -11,6 +12,7 @@ export interface Dish {
   restaurant_id: number;
   is_favorite: boolean;
   distance_km?: number;
+  status?: string;
 }
 
 export interface Order {

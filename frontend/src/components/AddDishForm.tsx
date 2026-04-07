@@ -4,16 +4,19 @@ import { Image as ImageIcon, CheckCircle2, DollarSign, Zap, Receipt, ChevronRigh
 import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import { InputGroup } from './InputGroup'
+import { useTranslation } from '../i18n'
 
 interface AddDishFormProps {
   onSuccess: () => void;
 }
 
 export function AddDishForm({ onSuccess }: AddDishFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [discount, setDiscount] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [category, setCategory] = useState('Milliy taomlar');
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +30,7 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     setLoading(true);
     const formData = new FormData();
     formData.append('name', name);
+    formData.append('category', category);
     formData.append('original_price', price);
     formData.append('discount_price', discount);
     formData.append('quantity', quantity);
@@ -59,7 +63,7 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     <>
       <h2 className="text-[10px] text-tg-hint font-bold uppercase tracking-[0.2em] px-2 mb-4 flex items-center gap-2">
          <div className="w-1 h-3 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" /> 
-         Yangi taklif qo'shish
+         {t('add_offer')}
       </h2>
       
       <form onSubmit={handleSubmitDish} className="space-y-6 mb-16">
@@ -93,12 +97,26 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
         </motion.div>
 
         <div className="space-y-4">
-          <InputGroup label="Taom nomi" value={name} onChange={setName} placeholder="Masalan: Lavash, Burger..." icon={<Receipt size={16}/>} />
-          <div className="grid grid-cols-2 gap-4">
-            <InputGroup label="Asl narxi" value={price} onChange={setPrice} placeholder="40,000" type="number" icon={<DollarSign size={16}/>} />
-            <InputGroup label="Chegirma narxi" value={discount} onChange={setDiscount} placeholder="15,000" type="number" icon={<Zap size={16}/>} />
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-tg-hint font-black uppercase tracking-widest px-1 opacity-40">{t('category')}</label>
+            <select 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full glass-card bg-white/5 border-white/10 p-4 text-sm focus:ring-2 ring-primary/20 outline-none transition-all font-medium appearance-none"
+            >
+              <option value="Milliy taomlar">🍛 {t('national')}</option>
+              <option value="Fast-fud">🍔 {t('fastfood')}</option>
+              <option value="Shirinliklar">🧁 {t('desserts')}</option>
+              <option value="Salatlar">🥗 {t('salads')}</option>
+            </select>
           </div>
-          <InputGroup label="Soni (Portsiya)" value={quantity} onChange={setQuantity} placeholder="10" type="number" />
+
+          <InputGroup label={t('dish_name')} value={name} onChange={setName} placeholder="Masalan: Lavash, Burger..." icon={<Receipt size={16}/>} />
+          <div className="grid grid-cols-2 gap-4">
+            <InputGroup label={t('original_price')} value={price} onChange={setPrice} placeholder="40,000" type="number" icon={<DollarSign size={16}/>} />
+            <InputGroup label={t('discount_price')} value={discount} onChange={setDiscount} placeholder="15,000" type="number" icon={<Zap size={16}/>} />
+          </div>
+          <InputGroup label={t('quantity')} value={quantity} onChange={setQuantity} placeholder="10" type="number" />
         </div>
 
         <button 
@@ -110,7 +128,7 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              SOTUVGA CHIQARISH
+              {t('publish')}
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </>
           )}

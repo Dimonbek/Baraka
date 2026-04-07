@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Package, DollarSign, Activity, Store, AlertCircle } from 'lucide-react'
+import { TrendingUp, Package, DollarSign, Activity, Store, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import type { SellerProfile, Analytics, Dish } from '../types'
 import { StatCard } from '../components/StatCard'
 import { SellerRegistration } from '../components/SellerRegistration'
 import { AddDishForm } from '../components/AddDishForm'
+import { useTranslation } from '../i18n'
 
 function Seller() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [isSeller, setIsSeller] = useState<boolean | null>(null);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(false);
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [myDishes, setMyDishes] = useState<Dish[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [myDishes, setMyDishes] = useState<any[]>([]);
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
 
   const fetchProfile = async () => {
     try {
@@ -33,14 +36,26 @@ function Seller() {
 
   const fetchDashboardData = async () => {
     try {
-      const [analyticsData, dishesData] = await Promise.all([
-        api.get<Analytics>('/api/v1/seller/analytics'),
-        api.get<Dish[]>('/api/v1/seller/dishes/all')
+      const [analyticsData, dishesData, ordersData] = await Promise.all([
+        api.get('/api/v1/seller/analytics'),
+        api.get<any[]>('/api/v1/seller/dishes/all'),
+        api.get<any[]>('/api/v1/seller/orders')
       ]);
       setAnalytics(analyticsData);
       setMyDishes(dishesData);
+      setActiveOrders(ordersData);
     } catch (err) {
       toast.error("Ma'lumotlarni yuklab bo'lmadi");
+    }
+  };
+
+  const handleCompleteOrder = async (orderId: number) => {
+    try {
+      await api.post(`/api/v1/seller/orders/${orderId}/complete`);
+      toast.success("Buyurtma yakunlandi!");
+      fetchDashboardData();
+    } catch (err: any) {
+      toast.error(err.message || "Xatolik yuz berdi");
     }
   };
 
@@ -78,7 +93,7 @@ function Seller() {
                <div className="flex items-center gap-2 mt-1">
                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                   <p className="text-tg-hint text-[10px] font-bold uppercase tracking-widest opacity-80">
-                    Sotuvchi Paneli
+                    {t('seller_panel')}
                   </p>
                </div>
             </div>
@@ -97,12 +112,49 @@ function Seller() {
            <button onClick={fetchDashboardData} className="glass-card px-8 py-2 text-sm font-bold border-white/10">Yangilash</button>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-2 gap-4 mb-12">
           <StatCard icon={<TrendingUp size={16}/>} label="Jami Sotuv" value={analytics?.total_orders || 0} color="text-primary" />
           <StatCard icon={<DollarSign size={16}/>} label="Daromad" value={`${(analytics?.total_revenue || 0).toLocaleString()} s.`} color="text-orange-400" />
           <StatCard icon={<Activity size={16}/>} label="Aktiv Taklif" value={analytics?.active_dishes || 0} color="text-cyan-400" />
           <StatCard icon={<Package size={16}/>} label="Jami Taom" value={analytics?.total_dishes || 0} color="text-emerald-400" />
         </div>
+
+        {/* Active Orders Section */}
+        <h2 className="text-[10px] text-tg-hint font-bold uppercase tracking-[0.2em] px-2 mb-4 flex items-center gap-2">
+           <div className="w-1 h-3 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> 
+           {t('active_orders')}
+        </h2>
+        <div className="grid gap-4 mb-12">
+          {activeOrders.filter(o => o.status === 'pending').length === 0 ? (
+            <div className="py-8 text-center glass-card border-white/5 opacity-50 italic text-sm">{t('no_offers')}</div>
+          ) : (
+            activeOrders.filter(o => o.status === 'pending').map((order) => (
+              <motion.div 
+                 key={order.id}
+                 layout
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 className="glass-card p-5 border-emerald-500/10 bg-emerald-500/5 ring-1 ring-emerald-500/10 flex justify-between items-center"
+              >
+                 <div>
+                    <div className="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                      <CheckCircle2 size={12} /> Kod: {order.verification_code}
+                    </div>
+                    <h4 className="font-bold text-[15px]">{order.dish_name} x {order.quantity}</h4>
+                    <p className="text-[10px] text-tg-hint mt-1">Vaqti: {new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                 </div>
+                 <button 
+                  onClick={() => handleCompleteOrder(order.id)}
+                  className="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                 >
+                   TAYYOR
+                 </button>
+              </motion.div>
+            ))
+          )}
+        </div>
+        </>
       )}
 
       {/* Add New Dish Form Component */}
@@ -110,11 +162,11 @@ function Seller() {
 
       {/* Inventory */}
       <h2 className="text-[10px] text-tg-hint font-bold uppercase tracking-[0.2em] px-2 mb-4 flex items-center gap-2">
-         <div className="w-1 h-3 bg-white/20 rounded-full" /> Mening taomlarim
+         <div className="w-1 h-3 bg-white/20 rounded-full" /> {t('my_dishes')}
       </h2>
       <div className="grid gap-3">
         {myDishes.length === 0 ? (
-          <div className="py-12 text-center glass-card border-white/5 opacity-50 italic text-sm">Hali takliflar yo'q</div>
+          <div className="py-12 text-center glass-card border-white/5 opacity-50 italic text-sm">{t('no_offers')}</div>
         ) : (
           myDishes.map((dish, i) => (
             <motion.div 

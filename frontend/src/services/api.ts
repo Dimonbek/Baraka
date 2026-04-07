@@ -4,9 +4,16 @@ class ApiError extends Error {
   status: number;
   data: any;
   constructor(status: number, data: any) {
-    const message = data?.detail 
-      ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) 
-      : 'Xatolik yuz berdi';
+    let message = 'Xatolik yuz berdi';
+    if (data?.detail) {
+      if (typeof data.detail === 'string') {
+        message = data.detail;
+      } else if (Array.isArray(data.detail) && data.detail[0]?.msg) {
+        message = data.detail[0].msg; // Handling Pydantic validation errors
+      } else {
+        message = JSON.stringify(data.detail);
+      }
+    }
     super(message);
     this.name = 'ApiError';
     this.status = status;

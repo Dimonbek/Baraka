@@ -43,6 +43,7 @@ class Dish(Base):
     description = Column(Text)
     image_url = Column(Text)
     quantity = Column(Integer, default=0)
+    category = Column(String(100), default='Milliy taomlar') # Milliy taomlar, Fast-fud, Shirinliklar, Salatlar
     original_price = Column(DECIMAL(10, 2))
     discount_price = Column(DECIMAL(10, 2))
     pickup_start = Column(Time)

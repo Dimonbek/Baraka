@@ -5,14 +5,19 @@ import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import { InputGroup } from './InputGroup'
 import { FeatureCard } from './FeatureCard'
+import { MapPicker } from './MapPicker'
+import { useTranslation } from '../i18n'
 
 interface SellerRegistrationProps {
   onSuccess: () => void;
 }
 
 export function SellerRegistration({ onSuccess }: SellerRegistrationProps) {
+  const { t } = useTranslation();
   const [regName, setRegName] = useState('');
   const [regAddress, setRegAddress] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -21,6 +26,8 @@ export function SellerRegistration({ onSuccess }: SellerRegistrationProps) {
     const formData = new FormData();
     formData.append('name', regName);
     formData.append('address', regAddress);
+    if (lat) formData.append('lat', lat.toString());
+    if (lng) formData.append('lng', lng.toString());
 
     try {
       await api.post('/api/v1/seller/register', formData);
@@ -30,6 +37,7 @@ export function SellerRegistration({ onSuccess }: SellerRegistrationProps) {
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       
       onSuccess();
+      window.location.reload(); // Xaridor endi Sotuvchi bo'lgani uchun tizimni to'liq yuklaymiz
     } catch (err: any) {
       toast.error(err.message || "Xatolik yuz berdi");
     } finally {
@@ -75,7 +83,7 @@ export function SellerRegistration({ onSuccess }: SellerRegistrationProps) {
          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10" />
          <h2 className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
             <div className="w-1 h-3 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" /> 
-            Restoran ro'yxatdan o'tkazish
+            {t('register_restaurant')}
          </h2>
          
          <form onSubmit={handleRegister} className="space-y-5">
@@ -87,19 +95,24 @@ export function SellerRegistration({ onSuccess }: SellerRegistrationProps) {
               icon={<Receipt size={16} />}
             />
             <InputGroup 
-              label="Manzil" 
+              label={t('address')} 
               value={regAddress} 
               onChange={setRegAddress} 
               placeholder="Shahar, ko'cha, uy raqami" 
               icon={<MapPin size={16} />}
             />
+
+            <div className="space-y-1.5">
+               <label className="text-[10px] text-primary/60 font-black uppercase tracking-widest px-1">{t('mark_on_map')}</label>
+               <MapPicker onLocationSelect={(lat, lng) => { setLat(lat); setLng(lng); }} />
+            </div>
             
             <button 
               type="submit" 
               disabled={loading || !regName || !regAddress}
               className="w-full bg-primary text-white font-black py-5 rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 mt-4"
             >
-              {loading ? "YUBORILMOQDA..." : "RO'YXATDAN O'TISH"}
+              {loading ? "..." : t('register')}
               {!loading && <ChevronRight size={18} />}
             </button>
          </form>

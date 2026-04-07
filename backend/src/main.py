@@ -151,6 +151,7 @@ def get_dishes(lat: float = None, lng: float = None, db: Session = Depends(get_d
             "restaurant_id": dish.restaurant_id,
             "restaurant_name": dish.restaurant.name,
             "name": dish.name,
+            "category": dish.category,
             "original_price": dish.original_price,
             "discount_price": dish.discount_price,
             "image_url": dish.image_url,
@@ -240,6 +241,7 @@ def remove_favorite(restaurant_id: int, db: Session = Depends(get_db), current_u
 @app.post("/api/v1/seller/dishes")
 async def create_dish(
     name: str = Form(...),
+    category: str = Form("Milliy taomlar"),
     original_price: float = Form(...),
     discount_price: float = Form(...),
     quantity: int = Form(1),
@@ -267,6 +269,7 @@ async def create_dish(
     new_dish = models.Dish(
         restaurant_id=restaurant.id,
         name=name,
+        category=category,
         original_price=original_price,
         discount_price=discount_price,
         image_url=image_url,
@@ -320,8 +323,8 @@ def get_seller_profile(db: Session = Depends(get_db), current_user: models.User 
 def register_seller(
     name: str = Form(...),
     address: str = Form(...),
-    lat: Optional[float] = Form(None),
-    lng: Optional[float] = Form(None),
+    lat: Optional[str] = Form(None),
+    lng: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -333,8 +336,8 @@ def register_seller(
         owner_id=current_user.id,
         name=name,
         address=address,
-        latitude=lat,
-        longitude=lng,
+        latitude=str(lat) if lat else None,
+        longitude=str(lng) if lng else None,
         status="active" # In real app could be 'pending'
     )
     
@@ -342,6 +345,41 @@ def register_seller(
     db.add(new_restaurant)
     db.commit()
     return {"status": "success", "message": "Restoran muvaffaqiyatli ro'yxatdan o'tdi!"}
+
+@app.get("/api/v1/seller/orders")
+def get_seller_orders(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    if not restaurant: return []
+    
+    orders = db.query(models.Order).join(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).order_by(models.Order.created_at.desc()).all()
+    
+    result = []
+    for order in orders:
+        # Calculate remaining time
+        remaining = order.pickup_time * 60 - (datetime.now(order.created_at.tzinfo) - order.created_at).total_seconds()
+        
+        result.append({
+            "id": order.id,
+            "dish_name": order.dish.name,
+            "quantity": order.quantity,
+            "verification_code": order.verification_code,
+            "status": order.status,
+            "remaining_seconds": max(0, int(remaining)),
+            "created_at": order.created_at.isoformat()
+        })
+    return result
+
+@app.post("/api/v1/seller/orders/{order_id}/complete")
+def complete_order(order_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    
+    if not order or not restaurant or order.dish.restaurant_id != restaurant.id:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+        
+    order.status = "completed"
+    db.commit()
+    return {"status": "success"}
 
 # --- Common Endpoints ---
 

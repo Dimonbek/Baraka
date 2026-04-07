@@ -107,12 +107,12 @@ function Home() {
       <header className="mb-8 flex justify-between items-center py-4">
         <div>
            <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent uppercase py-1">
-             Baraka Toping
+             Uvol Bo'lmasin
            </h1>
            <div className="flex items-center gap-2 mt-1">
              <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-             <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-               Baraka isrof qilingan joydan qochadi
+             <p className="text-primary text-[10px] font-black uppercase tracking-[0.05em] opacity-80 leading-relaxed">
+               Isrofni to'xtating, barakani toping — kechki chegirmalar endi bir joyda!
              </p>
            </div>
         </div>

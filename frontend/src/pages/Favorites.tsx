@@ -16,8 +16,8 @@ function Favorites() {
       try {
         const data = await api.get<Restaurant[]>('/api/v1/favorites');
         setFavorites(data);
-      } catch (err) {
-        toast.error("Saralanganlarni yuklab bo'lmadi");
+      } catch (err: any) {
+        toast.error(err.message || "Saralanganlarni yuklab bo'lmadi");
       } finally {
         setLoading(false);
       }

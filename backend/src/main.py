@@ -39,17 +39,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global Error Handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    trace = traceback.format_exc()
     # Logs for server console
     print(f" [SERVER ERROR] {request.method} {request.url.path}: {exc}")
+    print(trace)
     return JSONResponse(
         status_code=500,
-        content={"status": "error", "message": "Serverda kutilmagan xatolik yuz berdi. Iltimos keyinroq urinib ko'ring."}
+        content={
+            "status": "error", 
+            "message": "Serverda kutilmagan xatolik yuz berdi. Iltimos keyinroq urinib ko'ring.",
+            "detail": str(exc)
+        }
     )
-
-@app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,

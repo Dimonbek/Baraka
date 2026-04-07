@@ -13,7 +13,7 @@ function Home() {
   const navigate = useNavigate();
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | boolean>(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [bookingStatus, setBookingStatus] = useState<any>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -56,8 +56,8 @@ function Home() {
       if (userLocation) path += `?lat=${userLocation.lat}&lng=${userLocation.lng}`;
       const data = await api.get<Dish[]>(path);
       setDishes(data);
-    } catch (err) {
-      setError(true);
+    } catch (err: any) {
+      setError(err.message || true);
       // Removed redundant toast to prevent spamming
     } finally {
       setLoading(false);
@@ -157,9 +157,11 @@ function Home() {
       </div>
 
       {error ? (
-        <div className="py-20 text-center flex flex-col items-center">
+        <div className="py-20 text-center flex flex-col items-center px-4">
            <AlertCircle size={48} className="text-red-500/50 mb-4" />
-           <p className="text-tg-hint font-medium mb-6">{t('connection_error')}</p>
+           <p className="text-tg-hint font-medium mb-6 text-center">
+             {typeof error === 'string' ? error : t('connection_error')}
+           </p>
            <button onClick={loadDishes} className="glass-card px-6 py-2 text-sm font-bold border-white/10">{t('retry')}</button>
         </div>
       ) : loading ? (

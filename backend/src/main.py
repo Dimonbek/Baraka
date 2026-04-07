@@ -9,7 +9,7 @@ from urllib.parse import parse_qsl
 from datetime import datetime, timedelta
 from typing import Optional, List
 
-from fastapi import FastAPI, Header, HTTPException, Depends, File, UploadFile, Form, Request
+from fastapi import FastAPI, Header, HTTPException, Depends, File, UploadFile, Form, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
@@ -372,8 +372,20 @@ def create_order(dish_id: int, quantity: int = 1, pickup_time: int = 30, db: Ses
         "dish_name": dish.name
     }
 
+async def send_telegram_notification(telegram_id: int, text: str):
+    try:
+        await bot.bot.send_message(telegram_id, text)
+        print(f" [NOTIF SUCCESS] Feedback notification sent to {telegram_id}")
+    except Exception as e:
+        print(f" [NOTIF ERROR] Could not send feedback notification: {e}")
+
 @app.post("/api/v1/reviews")
-def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def create_review(
+    review: schemas.ReviewCreate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
     # Create the review record
     new_review = models.Review(
         user_id=current_user.id,
@@ -385,7 +397,7 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), c
     db.commit()
     db.refresh(new_review)
 
-    # Send notification to the restaurant owner (Seller)
+    # Send notification to the restaurant owner (Seller) safely via BackgroundTask
     try:
         # Find the restaurant owner via the dish
         dish = db.query(models.Dish).filter(models.Dish.id == review.dish_id).first()
@@ -402,11 +414,10 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db), c
                 f"💡 Bu fikr mijoz tomonidan maxfiy yuborildi."
             )
             
-            # Send as plain text to be 100% sure it delivers
-            asyncio.create_task(bot.bot.send_message(owner_telegram_id, notification_text))
-            print(f" [NOTIF SUCCESS] Feedback notification sent to {owner_telegram_id}")
+            # Use FastAPI Native BackgroundTask
+            background_tasks.add_task(send_telegram_notification, owner_telegram_id, notification_text)
     except Exception as e:
-        print(f" [NOTIF ERROR] Could not send feedback notification: {e}")
+        print(f" [NOTIF ERROR] Failed to register background task: {e}")
 
     return {"status": "success"}
 

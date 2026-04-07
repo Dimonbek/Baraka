@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse
 
 # New Absolute Imports for Root-level Entry Point
 # We use 'from src import ...' because we are now in the backend/ root
-from src.database import engine
-from src import models, api_buyer, api_seller, api_common, config
+import models, api_buyer, api_seller, api_common, config
+from database import engine
 
 # Database initialization
 models.Base.metadata.create_all(bind=engine)

@@ -178,6 +178,7 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
         if remaining > 0 and order.status == 'pending':
             result.append({
                 "id": order.id,
+                "dish_id": order.dish_id,
                 "dish_name": order.dish.name,
                 "verification_code": order.verification_code,
                 "status": order.status,
@@ -191,6 +192,7 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
                 db.commit()
             result.append({
                 "id": order.id,
+                "dish_id": order.dish_id,
                 "dish_name": order.dish.name,
                 "verification_code": "---",
                 "status": order.status,

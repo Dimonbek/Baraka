@@ -4,22 +4,17 @@ import { Heart, Stars, MapPin, Store, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 import { toast } from 'react-hot-toast'
-
-interface FavoriteRestaurant {
-  id: number;
-  name: string;
-  address: string;
-}
+import type { Restaurant } from '../types'
 
 function Favorites() {
-  const [favorites, setFavorites] = useState<FavoriteRestaurant[]>([]);
+  const [favorites, setFavorites] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadFavorites = async () => {
       setLoading(true);
       try {
-        const data = await api.get<FavoriteRestaurant[]>('/api/v1/favorites');
+        const data = await api.get<Restaurant[]>('/api/v1/favorites');
         setFavorites(data);
       } catch (err) {
         toast.error("Saralanganlarni yuklab bo'lmadi");
@@ -29,6 +24,16 @@ function Favorites() {
     };
     loadFavorites();
   }, []);
+
+  const removeFavorite = async (restaurant_id: number) => {
+    try {
+      await api.delete(`/api/v1/favorites/${restaurant_id}`);
+      toast.success("Saralanganlardan olib tashlandi");
+      setFavorites(prev => prev.filter(f => f.id !== restaurant_id));
+    } catch (err: any) {
+      toast.error(err.message || "Xatolik yuz berdi");
+    }
+  };
 
   return (
     <motion.div 
@@ -95,9 +100,12 @@ function Favorites() {
                     </div>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/10">
+                <button 
+                  onClick={() => removeFavorite(res.id)}
+                  className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white transition-colors active:scale-95 cursor-pointer"
+                >
                    <Heart size={18} fill="currentColor" />
-                </div>
+                </button>
               </motion.div>
             ))}
           </AnimatePresence>

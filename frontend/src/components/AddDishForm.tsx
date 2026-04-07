@@ -41,7 +41,8 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     }
 
     try {
-      await api.post('/api/v1/seller/dishes', formData);
+      const response = await api.post('/api/v1/seller/dishes', formData);
+      console.log("Dish created:", response);
       const tg = (window as any).Telegram.WebApp;
       if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       toast.success("Taom muvaffaqiyatli qo'shildi!");

@@ -31,15 +31,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers.set('X-Telegram-Init-Data', tg.initData);
   }
 
-  // Ngrok bypass
-  headers.set('ngrok-skip-browser-warning', 'true');
+  // JSON and FormData Handling
+  let fetchOptions: RequestInit = { ...options, headers };
   
-  // JSON default
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  if (options.body instanceof FormData) {
+    // Multipart/form-data so'rovlarida header o'chirilishi shart, browser o'zi belgilashi lozim.
+    headers.delete('Content-Type');
+  } else if (!headers.has('Content-Type') && options.body && typeof options.body === 'string') {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, fetchOptions);
 
   if (!response.ok) {
     let errorData;

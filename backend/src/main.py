@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
-import models, api_buyer, api_seller, api_common, config
-from database import engine
+from .database import engine
+from . import models, api_buyer, api_seller, api_common, config
 
 # Database initialization
 models.Base.metadata.create_all(bind=engine)

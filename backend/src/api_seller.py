@@ -72,20 +72,78 @@ def get_seller_analytics(db: Session = Depends(get_db), current_user: models.Use
             "active_dishes": db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id, models.Dish.status == 'active').count()
         }
     except Exception as e:
+        print(f" [DB ERROR] Analytics failed: {e}")
         return {"total_dishes": 0, "total_orders": 0, "total_revenue": 0.0, "active_dishes": 0}
 
 @router.get("/profile")
 def get_seller_profile(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
-    if not restaurant:
-        return {"is_seller": False, "restaurant": None, "role": current_user.role}
-    return {
-        "is_seller": True,
-        "role": current_user.role,
-        "restaurant": {
-            "id": restaurant.id,
-            "name": restaurant.name,
-            "address": restaurant.address,
-            "status": restaurant.status
+    try:
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant:
+            return {"is_seller": False, "restaurant": None, "role": current_user.role}
+        return {
+            "is_seller": True,
+            "role": current_user.role,
+            "restaurant": {
+                "id": restaurant.id,
+                "name": restaurant.name,
+                "address": restaurant.address,
+                "status": restaurant.status
+            }
         }
-    }
+    except Exception as e:
+        return {"is_seller": False, "error": str(e)}
+
+@router.get("/orders")
+def get_seller_orders(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant: return []
+        
+        orders = db.query(models.Order).join(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).order_by(models.Order.created_at.desc()).all()
+        
+        result = []
+        from datetime import timezone, datetime
+        now = datetime.now(timezone.utc)
+        
+        for order in orders:
+            order_time = order.created_at
+            if order_time.tzinfo is None:
+                order_time = order_time.replace(tzinfo=timezone.utc)
+            
+            remaining = (order.pickup_time or 30) * 60 - (now - order_time).total_seconds()
+            
+            result.append({
+                "id": order.id,
+                "dish_name": order.dish.name,
+                "quantity": order.quantity,
+                "verification_code": order.verification_code,
+                "status": order.status,
+                "remaining_seconds": max(0, int(remaining)),
+                "created_at": order.created_at.isoformat()
+            })
+        return result
+    except Exception as e:
+        print(f" [DB ERROR] Orders fetch failed: {e}")
+        return []
+
+@router.post("/orders/{order_id}/complete")
+def complete_order(order_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    
+    if not order or not restaurant or order.dish.restaurant_id != restaurant.id:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+        
+    order.status = "completed"
+    db.commit()
+    return {"status": "success"}
+
+@router.get("/dishes/all")
+def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant: return []
+        return db.query(models.Dish).filter(models.Dish.restaurant_id == restaurant.id).order_by(models.Dish.status == 'active', models.Dish.created_at.desc()).all()
+    except Exception as e:
+        return []

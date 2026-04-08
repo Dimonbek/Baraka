@@ -86,33 +86,28 @@ function Profile() {
            <div className="bento-card p-8 space-y-8">
               <div className="space-y-3">
                  <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] ml-1">{t('full_name')}</label>
-                 <div className="flex items-center gap-4 bg-white/[0.03] p-5 rounded-2xl border border-white/[0.05] focus-within:border-primary/30 transition-all">
+                 <div className="flex items-center gap-4 bg-white/[0.03] p-5 rounded-2xl border border-white/[0.05] opacity-80">
                     <User size={20} className="text-white/20" />
                     <input 
-                      type="text" value={name} onChange={(e) => setName(e.target.value)}
+                      type="text" value={name} readOnly
                       className="bg-transparent border-none outline-none flex-1 text-base font-black tracking-tight"
                     />
                  </div>
               </div>
               <div className="space-y-3">
                  <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] ml-1">{t('phone')}</label>
-                 <div className="flex items-center gap-4 bg-white/[0.03] p-5 rounded-2xl border border-white/[0.05] focus-within:border-primary/30 transition-all">
+                 <div className="flex items-center gap-4 bg-white/[0.03] p-5 rounded-2xl border border-white/[0.05] opacity-80">
                     <Phone size={20} className="text-white/20" />
                     <input 
-                      type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      type="tel" value={phone} readOnly
                       placeholder="+998 90 123 45 67"
                       className="bg-transparent border-none outline-none flex-1 text-base font-black tracking-tight placeholder:text-white/5"
                     />
                  </div>
               </div>
-              <button 
-                onClick={saveProfile}
-                className="w-full bg-primary text-white py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-xl shadow-primary/20 active:scale-95 transition-all"
-              >
-                {t('save_changes')}
-              </button>
            </div>
         </div>
+
 
         {/* Language Selection */}
         <div className="space-y-6">

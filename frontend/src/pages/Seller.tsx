@@ -65,6 +65,23 @@ function Seller() {
     }
   };
 
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('image', file, file.name);
+      
+      const toastId = toast.loading("Logotip yangilanmoqda...");
+      await api.post('/api/v1/seller/restaurant/logo', formData);
+      toast.success("Logotip muvaffaqiyatli yangilandi!", { id: toastId });
+      
+      fetchProfile(); // Refresh profile to get the new logo
+    } catch (err: any) {
+      toast.error(err.message || "Logotipni yuklashda xatolik yuz berdi");
+    }
+  };
+
   useEffect(() => { fetchProfile(); }, []);
 
   if (fetching) {
@@ -111,8 +128,15 @@ function Seller() {
         <div className="flex items-center justify-between mb-8">
            <div className="flex items-center gap-5">
               <div className="w-20 h-20 emerald-glass p-1 shadow-2xl relative group">
+                <input 
+                  type="file" 
+                  id="logoInput" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleLogoChange} 
+                />
                 <div className="w-full h-full rounded-[28px] overflow-hidden">
-                  <img src={profile?.restaurant?.thumbnail_url || 'https://via.placeholder.com/150'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Restaurant Logo" />
+                  <img src={profile?.restaurant?.thumbnail_url ? `https://baraka.onrender.com${profile.restaurant.thumbnail_url}` : 'https://via.placeholder.com/150'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Restaurant Logo" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-[3px] border-[#020617] rounded-full animate-pulse-emerald shadow-[0_0_10px_#10b981]" />
               </div>
@@ -128,6 +152,7 @@ function Seller() {
            <motion.button 
              whileHover={{ scale: 1.05 }}
              whileTap={{ scale: 0.95 }}
+             onClick={() => document.getElementById('logoInput')?.click()}
              className="w-12 h-12 glass-card flex items-center justify-center text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all shadow-xl"
            >
               <Settings size={22} />

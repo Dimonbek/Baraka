@@ -137,7 +137,30 @@ def complete_order(order_id: int, db: Session = Depends(get_db), current_user: m
         
     order.status = "completed"
     db.commit()
+    db.commit()
     return {"status": "success"}
+
+@router.post("/restaurant/logo")
+async def update_restaurant_logo(
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran topilmadi")
+        
+    file_extension = image.filename.split(".")[-1]
+    file_name = f"logo_{uuid.uuid4()}.{file_extension}"
+    file_path = os.path.join(config.UPLOAD_DIR, file_name)
+    
+    with open(file_path, "wb") as buffer:
+        import shutil
+        shutil.copyfileobj(image.file, buffer)
+    
+    restaurant.thumbnail_url = f"/api/static/uploads/{file_name}"
+    db.commit()
+    return {"status": "success", "thumbnail_url": restaurant.thumbnail_url}
 
 @router.get("/dishes/all")
 def get_seller_dishes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):

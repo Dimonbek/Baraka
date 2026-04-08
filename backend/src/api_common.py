@@ -19,3 +19,25 @@ def get_profile(current_user: models.User = Depends(get_current_user)):
         "role": current_user.role,
         "telegram_id": current_user.telegram_id
     }
+
+@router.get("/api/v1/favorites")
+def get_favorites(current_user: models.User = Depends(get_current_user)):
+    return current_user.favorite_restaurants
+
+@router.post("/api/v1/favorites/{restaurant_id}")
+def add_favorite(restaurant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran topilmadi")
+    if restaurant not in current_user.favorite_restaurants:
+        current_user.favorite_restaurants.append(restaurant)
+        db.commit()
+    return {"status": "success"}
+
+@router.delete("/api/v1/favorites/{restaurant_id}")
+def remove_favorite(restaurant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
+    if restaurant in current_user.favorite_restaurants:
+        current_user.favorite_restaurants.remove(restaurant)
+        db.commit()
+    return {"status": "success"}

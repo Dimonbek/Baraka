@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login – Uvol bo'lmasin</title>
+    <style>
+        body {font-family: 'Inter', sans-serif; background:#020617; color:#f8fafc; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;}
+        .login-box {background:rgba(255,255,255,0.03); padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:320px;}
+        h1 {font-size:1.5rem; margin-bottom:1rem; text-align:center;}
+        input {width:100%; padding:0.6rem; margin:0.5rem 0; border:none; border-radius:6px; background:rgba(255,255,255,0.1); color:#f8fafc;}
+        button {width:100%; padding:0.6rem; margin-top:0.8rem; background:#10b981; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;}
+        .tagline {font-size:0.8rem; text-align:center; margin-top:1rem; color:#94a3b8;}
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Admin Panel</h1>
+        <form method="POST">
+            <input type="email" name="email" placeholder="Email" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+        </form>
+        <div class="tagline">Har bir tugma bosilishi — bitta isrofning oldini olish demakdir.</div>
+    </div>
+</body>
+</html>

@@ -27,6 +27,7 @@ class Restaurant(Base):
     address = Column(Text)
     latitude = Column(DECIMAL(10, 8))
     longitude = Column(DECIMAL(11, 8))
+    thumbnail_url = Column(Text)
     status = Column(String(50), default='pending')
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
@@ -61,6 +62,7 @@ class Order(Base):
     buyer_id = Column(Integer, ForeignKey("users.id"))
     dish_id = Column(Integer, ForeignKey("dishes.id"))
     quantity = Column(Integer, default=1)
+    total_price = Column(DECIMAL(10, 2))
     pickup_time = Column(Integer, default=30) # Default 30 minutes
     verification_code = Column(String(10), unique=True)
     status = Column(String(50), default='pending')

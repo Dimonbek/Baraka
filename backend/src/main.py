@@ -53,7 +53,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 async def on_startup():
     import asyncio
-    from . import bot, tasks
+    from . import bot, tasks, auto_migrate
+    print(" [SYSTEM] Database migratsiya qilinmoqda...")
+    try:
+        auto_migrate.migrate()
+    except Exception as e:
+        print(f" [DB ERROR] Migration failed: {e}")
+        
     print(" [SYSTEM] Background xizmatlar (Bot, Cleanup) ishga tushirilmoqda...")
     asyncio.create_task(bot.run_bot())
     asyncio.create_task(tasks.cleanup_expired_orders())

@@ -21,7 +21,7 @@ function Profile() {
     // Fetch real profile from backend
     const fetchMe = async () => {
       try {
-        const data = await api.get<any>('/api/v1/user/me');
+        const data = await api.get<any>('/api/v1/profile');
         if (data.full_name) setName(data.full_name);
         if (data.phone_number) setPhone(data.phone_number);
       } catch (err) {

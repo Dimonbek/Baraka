@@ -135,8 +135,8 @@ function Seller() {
                   className="hidden" 
                   onChange={handleLogoChange} 
                 />
-                <div className="w-full h-full rounded-[28px] overflow-hidden">
-                  <img src={profile?.restaurant?.thumbnail_url ? `https://baraka.onrender.com${profile.restaurant.thumbnail_url}` : 'https://via.placeholder.com/150'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Restaurant Logo" />
+                <div className="w-full h-full rounded-[28px] overflow-hidden bg-[#020617] flex items-center justify-center">
+                  <img src={profile?.restaurant?.thumbnail_url ? `${import.meta.env.VITE_API_URL || 'https://barakatoping-backend.onrender.com'}${profile.restaurant.thumbnail_url}` : 'https://placehold.co/150x150/020617/10b981?text=Logo'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt=" " />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-[3px] border-[#020617] rounded-full animate-pulse-emerald shadow-[0_0_10px_#10b981]" />
               </div>

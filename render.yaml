@@ -3,8 +3,9 @@ services:
     name: barakatoping-backend
     env: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: python -m backend.src.main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.main
     envVars:
       - key: DATABASE_URL
         fromDatabase:

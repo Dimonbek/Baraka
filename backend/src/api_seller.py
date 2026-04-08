@@ -23,34 +23,44 @@ async def create_dish(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    file_extension = image.filename.split(".")[-1]
-    file_name = f"{uuid.uuid4()}.{file_extension}"
-    file_path = os.path.join(config.UPLOAD_DIR, file_name)
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
-    
-    image_url = f"/api/static/uploads/{file_name}"
+    try:
+        if not image.filename:
+            file_extension = "jpg"
+        else:
+            file_extension = image.filename.split(".")[-1]
+            
+        file_name = f"{uuid.uuid4()}.{file_extension}"
+        file_path = os.path.join(config.UPLOAD_DIR, file_name)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        
+        image_url = f"/api/static/uploads/{file_name}"
 
-    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
-    if not restaurant:
-        restaurant = models.Restaurant(owner_id=current_user.id, name=f"{current_user.full_name} Oshxonasi")
-        db.add(restaurant)
+        restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+        if not restaurant:
+            restaurant = models.Restaurant(owner_id=current_user.id, name=f"{current_user.full_name} Oshxonasi")
+            db.add(restaurant)
+            db.commit()
+        
+        new_dish = models.Dish(
+            restaurant_id=restaurant.id,
+            name=name,
+            category=category,
+            original_price=original_price,
+            discount_price=discount_price,
+            image_url=image_url,
+            quantity=quantity,
+            pickup_time=30
+        )
+        db.add(new_dish)
         db.commit()
-    
-    new_dish = models.Dish(
-        restaurant_id=restaurant.id,
-        name=name,
-        category=category,
-        original_price=original_price,
-        discount_price=discount_price,
-        image_url=image_url,
-        quantity=quantity,
-        status="active"
-    )
-    db.add(new_dish)
-    db.commit()
-    return {"status": "success", "message": "Taom muvaffaqiyatli qo'shildi!"}
+        return {"status": "success", "id": new_dish.id}
+    except Exception as e:
+        import traceback
+        print(f" [UPLOAD ERROR] {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=f"Xatolik: {str(e)}")
 
 @router.get("/analytics")
 def get_seller_analytics(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):

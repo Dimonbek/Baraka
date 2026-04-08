@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Image as ImageIcon, CheckCircle2, DollarSign, Zap, Receipt, ChevronRight } from 'lucide-react'
+import { Image as ImageIcon, CheckCircle2, DollarSign, Zap, Receipt, ChevronRight, PackageOpen } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import { InputGroup } from './InputGroup'
@@ -18,7 +18,16 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
   const [quantity, setQuantity] = useState('1');
   const [category, setCategory] = useState('Milliy taomlar');
   const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmitDish = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,15 +43,10 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
     formData.append('original_price', price.toString());
     formData.append('discount_price', discount.toString());
     formData.append('quantity', quantity.toString());
-    
-    // Use the original image file directly if possible, or fallback to blob
-    if (image) {
-      formData.append('image', image, image.name);
-    }
+    formData.append('image', image, image.name);
 
     try {
-      const response = await api.post('/api/v1/seller/dishes', formData);
-      console.log("Dish created:", response);
+      await api.post('/api/v1/seller/dishes', formData);
       const tg = (window as any).Telegram.WebApp;
       if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       toast.success("Taom muvaffaqiyatli qo'shildi!");
@@ -52,9 +56,7 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
       setDiscount('');
       setQuantity('1');
       setImage(null);
-      
-      const fileInput = document.getElementById('file-input') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      setPreview(null);
       
       onSuccess();
     } catch (err: any) {
@@ -65,80 +67,127 @@ export function AddDishForm({ onSuccess }: AddDishFormProps) {
   };
 
   return (
-    <>
-      <h2 className="text-[10px] text-tg-hint font-bold uppercase tracking-[0.2em] px-2 mb-4 flex items-center gap-2">
-         <div className="w-1 h-3 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" /> 
-         {t('add_offer')}
-      </h2>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="emerald-glass p-8 space-y-8"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-lg">
+           <PackageOpen size={24} />
+        </div>
+        <div>
+           <h2 className="text-xl font-black gradient-text tracking-tighter uppercase leading-none">{t('add_offer')}</h2>
+           <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">Yangi mahsulot ma'lumotlarini kiriting</p>
+        </div>
+      </div>
       
-      <form onSubmit={handleSubmitDish} className="space-y-6 mb-16">
+      <form onSubmit={handleSubmitDish} className="space-y-8">
+        {/* Upload Area */}
         <motion.div 
           whileHover={{ scale: 1.01 }}
-          onClick={() => document.getElementById('file-input')?.click()}
-          className="glass-card p-6 border-dashed border-white/20 cursor-pointer hover:border-primary/50 transition-all flex flex-col items-center justify-center min-h-[160px] relative overflow-hidden group"
+          onClick={() => document.getElementById('file-input-dash')?.click()}
+          className="relative h-48 glass-card border-dashed border-white/20 cursor-pointer overflow-hidden group hover:border-emerald-500/30 transition-all duration-500"
         >
           <input 
-            id="file-input"
+            id="file-input-dash"
             type="file" 
             accept="image/*"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            onChange={handleImageChange}
             className="hidden"
           />
-          {image ? (
-            <div className="text-center animate-fade-in">
-               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle2 size={32} className="text-primary" />
+          
+          {preview ? (
+            <div className="w-full h-full relative group">
+               <img src={preview} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Preview" />
+               <div className="absolute inset-0 bg-emerald-950/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                  <CheckCircle2 size={32} className="text-emerald-400 drop-shadow-[0_0_10px_#34d399]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Rasm Almashtirish</span>
                </div>
-               <span className="text-sm font-bold text-white/90">{image.name}</span>
-               <p className="text-[10px] text-tg-hint mt-1">Rasm yuklandi</p>
             </div>
           ) : (
-            <div className="text-center group-hover:scale-110 transition-transform">
-              <ImageIcon size={48} className="text-white/10 mx-auto mb-4" />
-              <span className="text-sm font-bold text-white/50">Taom rasmini yuklang</span>
-              <p className="text-[10px] text-tg-hint mt-1">JPG, PNG formatlar tavsiya etiladi</p>
+            <div className="flex flex-col items-center justify-center p-6 h-full transition-transform duration-500 group-hover:scale-105">
+              <div className="w-16 h-16 bg-white/[0.03] rounded-3xl flex items-center justify-center mb-4 text-white/10 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-all duration-500">
+                <ImageIcon size={32} />
+              </div>
+              <span className="text-sm font-black text-white/40 uppercase tracking-tighter italic">Taom rasmini yuklang</span>
+              <p className="text-[9px] text-white/20 font-bold uppercase tracking-widest mt-2 px-8 text-center leading-relaxed">JPG yoki PNG formatda, mahsulot aniq ko'rinsin</p>
             </div>
           )}
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-[10px] text-tg-hint font-black uppercase tracking-widest px-1 opacity-40">{t('category')}</label>
-            <select 
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full glass-card bg-white/5 border-white/10 p-4 text-sm focus:ring-2 ring-primary/20 outline-none transition-all font-medium appearance-none"
-            >
-              <option value="Milliy taomlar">🍛 {t('national')}</option>
-              <option value="Fast-fud">🍔 {t('fastfood')}</option>
-              <option value="Shirinliklar">🧁 {t('desserts')}</option>
-              <option value="Salatlar">🥗 {t('salads')}</option>
-            </select>
+            <label className="text-[10px] text-white/40 font-black uppercase tracking-widest px-1 opacity-60 font-sans">KATEGORIYA</label>
+            <div className="relative">
+              <select 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full glass-card bg-white/[0.03] border-white/10 p-5 pr-10 text-sm focus:ring-2 ring-emerald-500/20 outline-none transition-all font-bold appearance-none uppercase tracking-wider"
+              >
+                <option value="Milliy taomlar" className="bg-[#020617]">🍛 Milliy taomlar</option>
+                <option value="Fast-fud" className="bg-[#020617]">🍔 Fast-fud</option>
+                <option value="Shirinliklar" className="bg-[#020617]">🧁 Shirinliklar</option>
+                <option value="Salatlar" className="bg-[#020617]">🥗 Salatlar</option>
+              </select>
+              <ChevronRight size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 rotate-90" />
+            </div>
           </div>
 
-          <InputGroup label={t('dish_name')} value={name} onChange={setName} placeholder="Masalan: Lavash, Burger..." icon={<Receipt size={16}/>} />
+          <InputGroup 
+            label={t('dish_name')} 
+            value={name} 
+            onChange={setName} 
+            placeholder="Masalan: Lavash, Burger..." 
+            icon={<Receipt size={18}/>} 
+          />
+          
           <div className="grid grid-cols-2 gap-4">
-            <InputGroup label={t('original_price')} value={price} onChange={setPrice} placeholder="40,000" type="number" icon={<DollarSign size={16}/>} />
-            <InputGroup label={t('discount_price')} value={discount} onChange={setDiscount} placeholder="15,000" type="number" icon={<Zap size={16}/>} />
+            <InputGroup 
+              label="ESKI NARX" 
+              value={price} 
+              onChange={setPrice} 
+              placeholder="40,000" 
+              type="number" 
+              icon={<DollarSign size={16}/>} 
+            />
+            <InputGroup 
+              label="CHEGIRMA NARX" 
+              value={discount} 
+              onChange={setDiscount} 
+              placeholder="15,000" 
+              type="number" 
+              icon={<Zap size={16}/>} 
+            />
           </div>
-          <InputGroup label={t('quantity')} value={quantity} onChange={setQuantity} placeholder="10" type="number" />
+          
+          <InputGroup 
+            label="SONI (TA)" 
+            value={quantity} 
+            onChange={setQuantity} 
+            placeholder="10" 
+            type="number" 
+          />
         </div>
 
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full bg-primary text-white font-black py-5 rounded-2xl shadow-xl shadow-primary/40 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 group"
+          className="w-full bg-emerald-500 text-white font-black py-6 rounded-[24px] shadow-2xl shadow-emerald-500/30 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 group relative overflow-hidden"
         >
           {loading ? (
-             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+             <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              {t('publish')}
-              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              <span className="relative z-10 flex items-center gap-2 text-[12px] uppercase tracking-[0.2em]">
+                {t('publish')}
+                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </>
           )}
         </button>
       </form>
-    </>
+    </motion.div>
   )
 }

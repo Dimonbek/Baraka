@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { TrendingUp, Package, DollarSign, Activity, Store, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, Store, AlertCircle, ShoppingBag, LayoutGrid, Settings, History } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
-import type { SellerProfile, Analytics, Dish } from '../types'
-import { StatCard } from '../components/StatCard'
+import type { SellerProfile } from '../types'
 import { EmptyState } from '../components/EmptyState'
 import { SellerRegistration } from '../components/SellerRegistration'
 import { AddDishForm } from '../components/AddDishForm'
+import { SellerStats } from '../components/SellerStats'
+import { ActiveOrderCard } from '../components/ActiveOrderCard'
 import { useTranslation } from '../i18n'
 
 function Seller() {
@@ -19,6 +20,8 @@ function Seller() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [myDishes, setMyDishes] = useState<any[]>([]);
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history'>('dashboard');
 
   const fetchProfile = async () => {
     try {
@@ -53,6 +56,8 @@ function Seller() {
   const handleCompleteOrder = async (orderId: number) => {
     try {
       await api.post(`/api/v1/seller/orders/${orderId}/complete`);
+      const tg = (window as any).Telegram.WebApp;
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       toast.success("Buyurtma yakunlandi!");
       fetchDashboardData();
     } catch (err: any) {
@@ -64,9 +69,18 @@ function Seller() {
 
   if (fetching) {
      return (
-       <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-tg-hint text-sm font-medium animate-pulse">Tekshirilmoqda...</p>
+       <div className="flex flex-col items-center justify-center py-20 gap-6">
+          <div className="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_20px_rgba(16,185,129,0.2)]" />
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-white font-black uppercase tracking-widest text-xs">Yuklamoqda</p>
+            <div className="h-1 w-24 bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                animate={{ x: [-100, 100] }} 
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                className="w-full h-full bg-emerald-500" 
+              />
+            </div>
+          </div>
        </div>
      )
   }
@@ -82,140 +96,198 @@ function Seller() {
     )
   }
 
-  // --- Render Onboarding View if Not a Seller ---
   if (isSeller === false) {
     return <SellerRegistration onSuccess={fetchProfile} />
   }
 
-  // --- Render Professional Seller Dashboard if Verified ---
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="pb-32"
     >
-      <header className="mb-10 flex items-center justify-between py-6">
-         <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bento-card flex items-center justify-center text-primary shadow-2xl">
-               <Store size={32} />
+      {/* Premium Header */}
+      <header className="mb-12">
+        <div className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-5">
+              <div className="w-20 h-20 emerald-glass p-1 shadow-2xl relative group">
+                <div className="w-full h-full rounded-[28px] overflow-hidden">
+                  <img src={profile?.restaurant?.thumbnail_url || 'https://via.placeholder.com/150'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Restaurant Logo" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-[3px] border-[#020617] rounded-full animate-pulse-emerald shadow-[0_0_10px_#10b981]" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                 <h1 className="text-4xl font-black gradient-text tracking-tighter uppercase leading-none">{profile?.restaurant?.name}</h1>
+                 <div className="flex items-center gap-2.5 mt-1.5 opacity-60">
+                    <Store size={14} className="text-emerald-400" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('seller_panel')}</span>
+                 </div>
+              </div>
+           </div>
+           
+           <motion.button 
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
+             className="w-12 h-12 glass-card flex items-center justify-center text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all shadow-xl"
+           >
+              <Settings size={22} />
+           </motion.button>
+        </div>
+
+        {/* Tab Switcher - Glass Style */}
+        <div className="emerald-glass p-1.5 flex gap-2 mb-10 overflow-hidden relative">
+          <button 
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'dashboard' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20' : 'text-white/40 hover:text-white/60'}`}
+          >
+            <LayoutGrid size={16} /> Dashbord
+          </button>
+          <button 
+             onClick={() => setActiveTab('history')}
+             className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20' : 'text-white/40 hover:text-white/60'}`}
+          >
+            <History size={16} /> Tarix
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'dashboard' ? (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-12"
+          >
+            <SellerStats analytics={analytics} />
+
+            {/* Quick Action: Add Dish */}
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6 px-2">
+                 <h2 className="text-[11px] text-white/40 font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                    <div className="w-1.5 h-4 bg-emerald-500 rounded-full emerald-glow shadow-[0_0_12px_#34d399]" /> 
+                    Amallar
+                 </h2>
+              </div>
+              
+              <motion.button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className={`w-full p-8 emerald-glass border-dashed flex flex-col items-center justify-center gap-4 group transition-all duration-500 ${showAddForm ? 'border-red-500/20 bg-red-500/5' : 'border-emerald-500/20'}`}
+              >
+                 <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${showAddForm ? 'bg-red-500/20 text-red-500 rotate-45' : 'bg-emerald-500 text-white emerald-glow scale-110 shadow-2xl'}`}>
+                    <Plus size={32} />
+                 </div>
+                 <div className="text-center">
+                    <span className="text-base font-black gradient-text tracking-tighter uppercase">
+                       {showAddForm ? "Bekor Qilish" : "Yangi Taklif Qo'shish"}
+                    </span>
+                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">
+                       {showAddForm ? "Formani yopish uchun bosing" : "Zaxiradagi mahsulotlarni soting"}
+                    </p>
+                 </div>
+              </motion.button>
+
+              <AnimatePresence>
+                {showAddForm && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-8 px-2 pb-12">
+                       <AddDishForm onSuccess={() => { fetchDashboardData(); setShowAddForm(false); }} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div>
-               <h1 className="text-3xl font-black gradient-text tracking-tighter uppercase">{profile?.restaurant?.name}</h1>
-               <div className="flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_#10b981]" />
-                  <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                    {t('seller_panel')}
-                  </p>
+
+            {/* Active Orders Horizontal Section */}
+            <div className="space-y-6">
+               <div className="flex items-center justify-between px-2">
+                  <h2 className="text-[11px] text-white/40 font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                     <div className="w-1.5 h-4 bg-emerald-500 rounded-full" /> 
+                     Aktiv Buyurtmalar
+                  </h2>
+                  <div className="px-3 py-1 bg-emerald-500/10 rounded-full text-[9px] font-black text-emerald-400 uppercase tracking-widest border border-emerald-500/10">
+                    {activeOrders.filter(o => o.status === 'pending').length} Ta
+                  </div>
+               </div>
+               
+               <div className="grid gap-4">
+                  {activeOrders.filter(o => o.status === 'pending').length === 0 ? (
+                    <div className="py-16 emerald-glass border-dashed opacity-50 flex flex-col items-center justify-center gap-4">
+                       <ShoppingBag size={48} className="text-white/10" />
+                       <p className="text-xs font-black uppercase tracking-widest text-white/30 italic">Hali buyurtmalar yo'q</p>
+                    </div>
+                  ) : (
+                    activeOrders.filter(o => o.status === 'pending').map((order) => (
+                      <ActiveOrderCard 
+                        key={order.id} 
+                        order={order} 
+                        onComplete={handleCompleteOrder} 
+                      />
+                    ))
+                  )}
                </div>
             </div>
-         </div>
-         <div className="px-5 py-2 bg-primary/10 border border-primary/20 rounded-full text-[10px] font-black text-primary uppercase shadow-inner">
-            AKTIV
-         </div>
-      </header>
-      
-      {error ? (
-        <div className="py-20 text-center flex flex-col items-center bento-card">
-           <AlertCircle size={48} className="text-red-500/50 mb-4" />
-           <p className="text-tg-hint/50 font-bold mb-6">Analitikani yuklab bo'lmadi</p>
-           <button onClick={fetchDashboardData} className="glass-button text-xs py-3">{t('retry')}</button>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 mb-10">
-            <StatCard icon={<TrendingUp size={20}/>} label="Jami Sotuv" value={analytics?.total_orders || 0} color="text-primary" />
-            <StatCard icon={<DollarSign size={20}/>} label="Daromad" value={`${(analytics?.total_revenue || 0).toLocaleString()} s.`} color="text-amber-400" />
-            <StatCard icon={<Activity size={20}/>} label="Aktiv Taklif" value={analytics?.active_dishes || 0} color="text-emerald-400" />
-            <StatCard icon={<Package size={20}/>} label="Jami Taom" value={analytics?.total_dishes || 0} color="text-primary" />
-          </div>
 
-          {/* Active Orders Section */}
-          <h2 className="text-[10px] text-tg-hint font-black uppercase tracking-[0.3em] px-2 mb-6 flex items-center gap-3">
-             <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_12px_#10b981]" /> 
-             {t('active_orders')}
-          </h2>
-          <div className="grid gap-4 mb-14">
-            {activeOrders.filter(o => o.status === 'pending').length === 0 ? (
-              <div className="py-12 text-center bento-card opacity-40 italic text-sm border-dashed">{t('no_offers')}</div>
-            ) : (
-              activeOrders.filter(o => o.status === 'pending').map((order) => (
-                <motion.div 
-                   key={order.id}
-                   layout
-                   initial={{ opacity: 0, y: 20 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   className="bento-card p-6 border-primary/10 bg-primary/5 flex justify-between items-center group"
-                >
-                   <div>
-                      <div className="text-[11px] text-primary font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <CheckCircle2 size={14} /> Kod: {order.verification_code}
-                      </div>
-                      <h4 className="font-black text-lg leading-tight">{order.dish_name}</h4>
-                      <div className="flex items-center gap-3 mt-2 text-[10px] text-tg-hint/60 font-bold uppercase tracking-widest">
-                         <span>Soni: {order.quantity}</span>
-                         <div className="w-1 h-1 rounded-full bg-white/10" />
-                         <span>{new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                      </div>
-                   </div>
-                   <button 
-                    onClick={() => handleCompleteOrder(order.id)}
-                    className="bg-primary text-white p-4 rounded-[20px] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 active:scale-95 transition-all"
-                   >
-                     TAYYOR
-                   </button>
-                </motion.div>
-              ))
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Forms & Inventory Section */}
-      <div className="space-y-14">
-        <AddDishForm onSuccess={fetchDashboardData} />
-
-        <div className="space-y-6">
-          <h2 className="text-[10px] text-tg-hint font-black uppercase tracking-[0.3em] px-2 flex items-center gap-3">
-             <div className="w-1.5 h-4 bg-white/10 rounded-full" /> {t('my_dishes')}
-          </h2>
-          <div className="grid gap-3">
-            {myDishes.length === 0 ? (
-              <EmptyState 
-                title="Hali taom yo'q"
-                description="Siz hali birorta ham chegirmali taklif qo'shmagansiz. Yuqoridagi formadan boshlang!"
-                icon="🥡"
-              />
-            ) : (
-              myDishes.map((dish, i) => (
-                <motion.div 
-                   initial={{ opacity: 0, x: -20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   transition={{ delay: i * 0.05 }}
-                   key={dish.id} 
-                   className="bento-card p-5 flex gap-5 items-center group hover:bg-white/[0.04] transition-all"
-                >
-                   <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border border-white/5">
-                      <img src={dish.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/150'} />
-                   </div>
-                   <div className="flex-1">
-                      <div className="font-black text-base group-hover:text-primary transition-colors leading-tight uppercase tracking-tight">{dish.name}</div>
-                      <div className="text-[10px] text-tg-hint/60 font-black uppercase tracking-widest mt-1.5">
-                        {dish.discount_price.toLocaleString()} s. • {dish.quantity} ta qoldi
-                      </div>
-                   </div>
-                   <div className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-xl border ${
-                      /* @ts-ignore */
-                      dish.status === 'active' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-red-500/10 text-red-500 border-red-500/20'
-                   }`}>
-                      {/* @ts-ignore */}
-                      {dish.status}
-                   </div>
-                </motion.div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+            {/* My Inventory List */}
+            <div className="space-y-6">
+              <h2 className="text-[11px] text-white/40 font-black uppercase tracking-[0.3em] px-2 flex items-center gap-3">
+                 <div className="w-1.5 h-4 bg-white/10 rounded-full" /> Mening Katalogim
+              </h2>
+              <div className="grid gap-3">
+                {myDishes.length === 0 ? (
+                  <div className="py-12 glass-card text-center text-white/30 text-xs italic">Katalog bo'sh</div>
+                ) : (
+                  myDishes.map((dish, i) => (
+                    <motion.div 
+                       initial={{ opacity: 0, x: -10 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       transition={{ delay: i * 0.05 }}
+                       key={dish.id} 
+                       className="glass-card p-4 flex gap-5 items-center group hover:bg-white/[0.04] transition-all"
+                    >
+                       <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-2xl border border-white/5 relative">
+                          <img src={dish.image_url} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" alt={dish.name} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                       </div>
+                       <div className="flex-1">
+                          <div className="font-black text-sm group-hover:text-emerald-400 transition-colors tracking-tight uppercase leading-tight">{dish.name}</div>
+                          <div className="text-[9px] text-white/40 font-black uppercase tracking-[0.1em] mt-1 flex gap-2 items-center">
+                            <span className="text-emerald-400">{dish.discount_price.toLocaleString()} s.</span>
+                            <span className="w-1 h-1 rounded-full bg-white/10" />
+                            <span>{dish.quantity} ta mavjud</span>
+                          </div>
+                       </div>
+                       <div className={`text-[8px] font-black uppercase px-3 py-1.5 rounded-xl border ${
+                          dish.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'
+                       }`}>
+                          {dish.status}
+                       </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="py-20 text-center glass-card border-dashed"
+          >
+             <AlertCircle size={48} className="text-white/10 mx-auto mb-4" />
+             <p className="text-xs font-black uppercase tracking-widest text-white/30 italic">Tarix bo'limi ustida ish olib borilmoqda</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

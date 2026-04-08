@@ -49,3 +49,18 @@ async def global_exception_handler(request: Request, exc: Exception):
             "detail": str(exc)
         }
     )
+
+@app.on_event("startup")
+async def on_startup():
+    import asyncio
+    from . import bot, tasks
+    print(" [SYSTEM] Background xizmatlar (Bot, Cleanup) ishga tushirilmoqda...")
+    asyncio.create_task(bot.run_bot())
+    asyncio.create_task(tasks.cleanup_expired_orders())
+    asyncio.create_task(tasks.keep_alive())
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    print(f" [SYSTEM] Web Service starting on port {port}...")
+    uvicorn.run("backend.src.main:app", host="0.0.0.0", port=port)

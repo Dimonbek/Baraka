@@ -30,6 +30,7 @@ def create_order(
         buyer_id=current_user.id,
         dish_id=dish.id,
         quantity=quantity,
+        pickup_time=pickup_time,
         total_price=dish.discount_price * quantity,
         verification_code=code,
         status="pending"

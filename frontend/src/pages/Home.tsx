@@ -5,6 +5,7 @@ import { Bell, Plus, Minus, CheckCircle2, ChevronRight, X, AlertCircle } from 'l
 import { toast } from 'react-hot-toast'
 import { api } from '../services/api'
 import type { Dish } from '../types'
+import { getFullUrl } from '../config'
 import { DishCard } from '../components/DishCard'
 import { EmptyState } from '../components/EmptyState'
 import { useTranslation } from '../i18n'
@@ -208,7 +209,7 @@ function Home() {
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-10 cursor-grab" onClick={() => setSelectedDish(null)} />
                 
                 <div className="relative h-64 rounded-[40px] overflow-hidden mb-10 group shadow-2xl">
-                   <img src={selectedDish.image_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                   <img src={getFullUrl(selectedDish.image_url)} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
                    <div className="absolute bottom-6 left-6">
                       <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">{selectedDish.restaurant_name}</span>

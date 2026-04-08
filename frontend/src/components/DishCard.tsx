@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { MapPin, Heart } from 'lucide-react';
 import type { Dish } from '../types';
+import { getFullUrl } from '../config';
 
 interface DishCardProps {
   dish: Dish;
@@ -20,9 +21,9 @@ export function DishCard({ dish, index, onClick, onToggleFavorite }: DishCardPro
     >
       <div className="relative w-28 h-28 shrink-0 rounded-3xl overflow-hidden shadow-2xl">
         <img 
-          src={dish.image_url} 
+          src={getFullUrl(dish.image_url)} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/300?text=Barakatoping'}
+          onError={(e) => e.currentTarget.src = 'https://placehold.co/300x300/10b981/ffffff?text=Baraka'}
           alt={dish.name}
         />
         <div className="absolute top-2 left-2 bg-primary/80 backdrop-blur-md px-2 py-1 rounded-xl flex items-center gap-1 shadow-2xl">

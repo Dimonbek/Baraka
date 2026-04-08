@@ -69,7 +69,7 @@ function Home() {
   const handleBook = async (dishId: number) => {
     const tg = (window as any).Telegram.WebApp;
     try {
-      const data = await api.post(`/api/v1/orders?dish_id=${dishId}&quantity=${orderQuantity}&pickup_time=${pickupTime}`);
+      const data = await api.post(`/api/v1/buyer/orders?dish_id=${dishId}&quantity=${orderQuantity}&pickup_time=${pickupTime}`);
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       setBookingStatus(data);
       toast.success("Muvaffaqiyatli bron qilindi!");

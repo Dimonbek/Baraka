@@ -51,7 +51,7 @@ async def create_dish(
             discount_price=discount_price,
             image_url=image_url,
             quantity=quantity,
-            pickup_time=30
+            status="active"
         )
         db.add(new_dish)
         db.commit()

@@ -9,6 +9,41 @@ from .auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/buyer", tags=["buyer"])
 
+@router.post("/orders")
+def create_order(
+    dish_id: int, 
+    quantity: int = 1, 
+    pickup_time: int = 30, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    dish = db.query(models.Dish).filter(models.Dish.id == dish_id).first()
+    if not dish:
+        raise HTTPException(status_code=404, detail="Taom topilmadi")
+    if dish.quantity < quantity:
+        raise HTTPException(status_code=400, detail="Bunday miqdorda taom qolmagan")
+
+    import random
+    code = f"{random.randint(100000, 999999)}"
+    
+    new_order = models.Order(
+        buyer_id=current_user.id,
+        dish_id=dish.id,
+        quantity=quantity,
+        total_price=dish.discount_price * quantity,
+        verification_code=code,
+        status="pending"
+    )
+    
+    # Decrease dish quantity
+    dish.quantity -= quantity
+    if dish.quantity <= 0:
+        dish.status = "sold_out"
+        
+    db.add(new_order)
+    db.commit()
+    return {"status": "success", "verification_code": code, "order_id": new_order.id}
+
 @router.get("/dishes")
 def get_dishes(lat: float = None, lng: float = None, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     dishes = db.query(models.Dish).join(models.Restaurant).filter(models.Dish.status == 'active', models.Dish.quantity > 0).all()

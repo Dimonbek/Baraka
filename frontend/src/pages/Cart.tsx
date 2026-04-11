@@ -133,9 +133,38 @@ function Cart() {
                   </div>
 
                   {order.status === 'pending' && (
-                    <button className="w-full mt-6 py-4 rounded-2xl bg-[#020617] border border-red-500/10 text-red-500/40 hover:text-red-500 hover:bg-red-500/5 transition-all text-[10px] font-black uppercase tracking-[0.2em] italic active:scale-95">
-                        Buyurtmani bekor qilish
-                    </button>
+                    <div className="mt-8 space-y-4">
+                      <button 
+                        onClick={async () => {
+                          const feedback = prompt("Fikr-mulohazangizni yozing:");
+                          if (feedback) {
+                            try {
+                               await api.post(`/api/v1/buyer/orders/${order.id}/feedback?feedback=${encodeURIComponent(feedback)}`);
+                               const tg = (window as any).Telegram.WebApp;
+                               if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                               alert("Fikringiz yuborildi!");
+                            } catch (e) {
+                               alert("Xatolik yuz berdi");
+                            }
+                          }
+                        }}
+                        className="w-full py-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all text-[11px] font-black uppercase tracking-[0.2em] italic active:scale-95"
+                      >
+                          Fikr bildirish
+                      </button>
+                      
+                      <div className="text-center">
+                        <p className="text-[10px] text-tg-hint/40 font-bold uppercase tracking-widest italic mb-2">
+                          Buyurtmani bekor qilish uchun sotuvchi bilan bog'laning:
+                        </p>
+                        <a 
+                          href={`tel:${order.seller_phone}`}
+                          className="text-primary text-[11px] font-black uppercase tracking-widest hover:underline transition-all"
+                        >
+                          {order.seller_phone || "Sotuvchi raqami yo'q"}
+                        </a>
+                      </div>
+                    </div>
                   )}
               </motion.div>
             ))}

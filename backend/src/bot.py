@@ -138,6 +138,12 @@ async def process_phone(message: types.Message, state: FSMContext):
     )
     await message.answer("Ilovani ochish:", reply_markup=webapp_keyboard)
 
+async def send_notification_to_user(telegram_id: int, text: str):
+    try:
+        await bot.send_message(chat_id=telegram_id, text=text, parse_mode="Markdown")
+    except Exception as e:
+        print(f" [BOT ERROR] Message to {telegram_id} failed: {e}")
+
 async def run_bot():
     if not BOT_TOKEN:
         print(" [BOT ERROR] No BOT_TOKEN found. Bot will not start.")

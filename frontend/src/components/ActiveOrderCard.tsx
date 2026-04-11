@@ -11,9 +11,10 @@ interface ActiveOrderCardProps {
     status: string;
   };
   onComplete: (id: number) => void;
+  onCancel: (id: number) => void;
 }
 
-export function ActiveOrderCard({ order, onComplete }: ActiveOrderCardProps) {
+export function ActiveOrderCard({ order, onComplete, onCancel }: ActiveOrderCardProps) {
   const time = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
@@ -51,13 +52,21 @@ export function ActiveOrderCard({ order, onComplete }: ActiveOrderCardProps) {
           <span className="text-lg font-black text-emerald-400 tracking-[0.2em]">{order.verification_code}</span>
         </div>
         
-        <button
-          onClick={() => onComplete(order.id)}
-          className="bg-emerald-500 text-white px-8 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-emerald-500/20 active:scale-95 transition-all hover:shadow-emerald-500/40 hover:emerald-glow flex items-center gap-2"
-        >
-          <CheckCircle2 size={16} />
-          Tayyor
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => onCancel(order.id)}
+            className="px-4 py-3.5 rounded-2xl border border-red-500/10 text-red-500/40 hover:text-red-500 hover:bg-red-500/5 transition-all text-[9px] font-black uppercase tracking-widest active:scale-95"
+          >
+            Bekor qilish
+          </button>
+          <button
+            onClick={() => onComplete(order.id)}
+            className="bg-emerald-500 text-white px-8 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-emerald-500/20 active:scale-95 transition-all hover:shadow-emerald-500/40 hover:emerald-glow flex items-center gap-2"
+          >
+            <CheckCircle2 size={16} />
+            Tayyor
+          </button>
+        </div>
       </div>
 
       {/* Decorative background number */}

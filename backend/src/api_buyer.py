@@ -102,8 +102,32 @@ def get_my_orders(db: Session = Depends(get_db), current_user: models.User = Dep
             "dish_id": order.dish_id,
             "dish_name": order.dish.name,
             "verification_code": order.verification_code if current_status == 'pending' else "---",
+            "seller_phone": order.dish.restaurant.owner.phone_number,
             "status": current_status,
             "remaining_seconds": max(0, int(remaining)),
             "created_at": order.created_at.isoformat()
         })
     return result
+
+@router.post("/orders/{order_id}/feedback")
+async def leave_feedback(
+    order_id: int, 
+    feedback: str = Query(...), 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    order = db.query(models.Order).filter(models.Order.id == order_id, models.Order.buyer_id == current_user.id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+        
+    seller = order.dish.restaurant.owner
+    if seller and seller.telegram_id:
+        from .bot import send_notification_to_user
+        text = f"🍱 *Yangi fikr-mulohaza*!\n\n" \
+               f"Taom: {order.dish.name}\n" \
+               f"Foydalanuvchi: {current_user.full_name}\n" \
+               f"📞 Raqami: {current_user.phone_number}\n" \
+               f"💬 Fikr: {feedback}"
+        await send_notification_to_user(seller.telegram_id, text)
+        
+    return {"status": "success"}

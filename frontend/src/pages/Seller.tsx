@@ -66,6 +66,19 @@ function Seller() {
     }
   };
 
+  const handleCancelOrder = async (orderId: number) => {
+    if (!confirm("Buyurtmani bekor qilmoqchimisiz?")) return;
+    try {
+      await api.post(`/api/v1/seller/orders/${orderId}/cancel`);
+      const tg = (window as any).Telegram.WebApp;
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+      toast.success("Buyurtma bekor qilindi!");
+      fetchDashboardData();
+    } catch (err: any) {
+      toast.error(err.message || "Xatolik yuz berdi");
+    }
+  };
+
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -255,6 +268,7 @@ function Seller() {
                         key={order.id} 
                         order={order} 
                         onComplete={handleCompleteOrder} 
+                        onCancel={handleCancelOrder}
                       />
                     ))
                   )}

@@ -147,7 +147,33 @@ def complete_order(order_id: int, db: Session = Depends(get_db), current_user: m
         
     order.status = "completed"
     db.commit()
+    return {"status": "success"}
+
+@router.post("/orders/{order_id}/cancel")
+async def cancel_order(order_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.owner_id == current_user.id).first()
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    
+    if not order or not restaurant or order.dish.restaurant_id != restaurant.id:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+        
+    order.status = "cancelled"
+    # Restore quantity
+    order.dish.quantity += order.quantity
+    if order.dish.status == "sold_out":
+        order.dish.status = "active"
+        
     db.commit()
+    
+    from .bot import send_notification_to_user
+    if order.buyer.telegram_id:
+        await send_notification_to_user(
+            order.buyer.telegram_id, 
+            f"🚫 *Buyurtma bekor qilindi*\n\n"
+            f"Sizning '{order.dish.name}' buyurtmangiz sotuvchi tomonidan bekor qilindi. \n"
+            f"Buning sababi ma'lumotlarni aniqlash uchun sotuvchi bilan bog'laning."
+        )
+        
     return {"status": "success"}
 
 @router.post("/restaurant/logo")

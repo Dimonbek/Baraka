@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, UtensilsCrossed, SearchX, Zap } from "lucide-react";
+import { Search, UtensilsCrossed, SearchX, Zap, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api-client";
 import { haptic } from "@/lib/telegram-webapp";
@@ -20,6 +20,8 @@ export default function HomePage() {
   const [category, setCategory] = useState<string>("all");
   const [selected, setSelected] = useState<DishDTO | null>(null);
   const [loc, setLoc] = useState<{ lat: number; lng: number } | null>(null);
+  // Radius filtri (km). null = hammasi.
+  const [radius, setRadius] = useState<number | null>(null);
   const [flash, setFlash] = useState<{ active: boolean; text: string } | null>(
     null,
   );
@@ -77,9 +79,15 @@ export default function HomePage() {
         !q ||
         d.name.toLowerCase().includes(q) ||
         d.restaurantName.toLowerCase().includes(q);
-      return catOk && qOk;
+      // Radius: masofasi bor va tanlangan radiusdan uzoq bo'lsa chiqarib tashlaymiz.
+      // Masofasi noma'lum taomlar (sotuvchi joylashuv bermagan) doim ko'rinadi.
+      const radOk =
+        radius == null || d.distanceKm == null || d.distanceKm <= radius;
+      return catOk && qOk && radOk;
     });
-  }, [dishes, query, category]);
+  }, [dishes, query, category, radius]);
+
+  const RADII = [5, 10, 15] as const;
 
   async function toggleFavorite(dish: DishDTO) {
     haptic.impact("light");
@@ -164,6 +172,48 @@ export default function HomePage() {
         ))}
       </div>
 
+      {/* Radius filtri — faqat joylashuv bor bo'lsa */}
+      {loc && (
+        <div className="flex items-center gap-2">
+          <MapPin size={15} className="shrink-0 text-brand-600" />
+          <div className="no-scrollbar flex gap-2 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => {
+                haptic.select();
+                setRadius(null);
+              }}
+              className={cn(
+                "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                radius == null
+                  ? "border-brand-600 bg-brand-600 text-white"
+                  : "border-line bg-surface text-muted",
+              )}
+            >
+              Hammasi
+            </button>
+            {RADII.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => {
+                  haptic.select();
+                  setRadius(r);
+                }}
+                className={cn(
+                  "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  radius === r
+                    ? "border-brand-600 bg-brand-600 text-white"
+                    : "border-line bg-surface text-muted",
+                )}
+              >
+                {r} km
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Ro'yxat */}
       {loading ? (
         <div className="space-y-3">
@@ -193,7 +243,9 @@ export default function HomePage() {
           description={
             query
               ? "Qidiruvga mos taom yo'q. Boshqa so'z bilan urinib ko'ring."
-              : "Bu turdagi chegirmali taomlar hozircha yo'q."
+              : radius != null
+                ? `${radius} km radiusda taom yo'q. Radiusni kengaytiring.`
+                : "Bu turdagi chegirmali taomlar hozircha yo'q."
           }
         />
       ) : (

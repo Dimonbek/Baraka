@@ -45,5 +45,12 @@ export interface ProfileDTO {
   phoneNumber: string | null;
   role: string;
   isSeller: boolean;
-  restaurant: { id: number; name: string; status: string } | null;
+  restaurant: {
+    id: number;
+    name: string;
+    status: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
 }

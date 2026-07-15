@@ -11,10 +11,15 @@ import {
   ChevronRight,
   Minus,
   EyeOff,
+  MapPin,
+  LocateFixed,
+  Loader2,
+  Check,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, ApiError } from "@/lib/api-client";
 import { haptic } from "@/lib/telegram-webapp";
+import { requestLocation } from "@/lib/location";
 import type { ProfileDTO } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
@@ -43,6 +48,11 @@ export default function SellerPage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [registering, setRegistering] = useState(false);
+  // Ro'yxatdan o'tishda tanlangan joylashuv
+  const [regLoc, setRegLoc] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [locBusy, setLocBusy] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     const [a, d] = await Promise.all([
@@ -70,6 +80,21 @@ export default function SellerPage() {
     load();
   }, [load]);
 
+  // Ro'yxatdan o'tishda joylashuvni olish
+  async function shareRegLocation() {
+    setLocBusy(true);
+    try {
+      const l = await requestLocation();
+      setRegLoc(l);
+      haptic.notify("success");
+      toast.success("Joylashuv olindi");
+    } catch {
+      toast.error("Joylashuvga ruxsat bering yoki qayta urinib ko'ring");
+    } finally {
+      setLocBusy(false);
+    }
+  }
+
   async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -78,6 +103,7 @@ export default function SellerPage() {
       await api.post("/api/seller/register", {
         restaurantName: String(form.get("restaurantName") ?? ""),
         address: String(form.get("address") ?? ""),
+        ...(regLoc ? { latitude: regLoc.lat, longitude: regLoc.lng } : {}),
       });
       haptic.notify("success");
       toast.success("Tabriklaymiz! Endi taom qo'sha olasiz");
@@ -86,6 +112,29 @@ export default function SellerPage() {
       toast.error(err instanceof ApiError ? err.message : "Xatolik");
     } finally {
       setRegistering(false);
+    }
+  }
+
+  // Dashboard: restoran joylashuvini belgilash/yangilash
+  async function updateLocation() {
+    setLocBusy(true);
+    try {
+      const l = await requestLocation();
+      await api.patch("/api/seller/restaurant", {
+        latitude: l.lat,
+        longitude: l.lng,
+      });
+      haptic.notify("success");
+      toast.success("Joylashuv saqlandi");
+      await load();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Joylashuvga ruxsat bering yoki qayta urinib ko'ring",
+      );
+    } finally {
+      setLocBusy(false);
     }
   }
 
@@ -165,6 +214,37 @@ export default function SellerPage() {
               className="input"
             />
           </label>
+
+          {/* Joylashuv — xaridorlarga masofa/radius bo'yicha ko'rsatish uchun */}
+          <div>
+            <span className="mb-1.5 block text-xs font-semibold text-muted">
+              Joylashuv
+            </span>
+            <button
+              type="button"
+              onClick={shareRegLocation}
+              disabled={locBusy}
+              className={
+                "press flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold disabled:opacity-60 " +
+                (regLoc
+                  ? "border-brand-600 bg-brand-50 text-brand-700"
+                  : "border-line bg-surface text-ink")
+              }
+            >
+              {locBusy ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : regLoc ? (
+                <Check size={16} />
+              ) : (
+                <LocateFixed size={16} />
+              )}
+              {regLoc ? "Joylashuv olindi" : "Joylashuvni ulashish"}
+            </button>
+            <p className="mt-1.5 text-[11px] text-faint">
+              Xaridorlar sizni yaqin-atrofdan (masofa bo&apos;yicha) topishi uchun.
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={registering}
@@ -212,6 +292,58 @@ export default function SellerPage() {
           value={String(analytics?.activeDishes ?? 0)}
         />
       </div>
+
+      {/* Joylashuv holati */}
+      {(() => {
+        const hasLoc =
+          profile.restaurant?.latitude != null &&
+          profile.restaurant?.longitude != null;
+        return (
+          <div
+            className={
+              "card flex items-center gap-3 p-4 " +
+              (hasLoc ? "" : "border-accent-500/40 bg-accent-500/5")
+            }
+          >
+            <div
+              className={
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl " +
+                (hasLoc
+                  ? "bg-brand-50 text-brand-600"
+                  : "bg-accent-500/15 text-accent-600")
+              }
+            >
+              <MapPin size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-ink">Joylashuv</p>
+              <p className="text-sm text-muted">
+                {hasLoc
+                  ? "Belgilangan — xaridorlar sizni yaqindan topadi"
+                  : "Belgilanmagan — xaridorlar masofani ko'rmaydi"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={updateLocation}
+              disabled={locBusy}
+              className={
+                "press flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold disabled:opacity-60 " +
+                (hasLoc
+                  ? "bg-app text-ink"
+                  : "bg-brand-600 text-white")
+              }
+            >
+              {locBusy ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <LocateFixed size={15} />
+              )}
+              {hasLoc ? "Yangilash" : "Belgilash"}
+            </button>
+          </div>
+        );
+      })()}
 
       <Link
         href="/seller/orders"

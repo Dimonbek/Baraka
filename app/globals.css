@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/*
+  "Uvol Bo'lmasin" — yorug', toza, oziq-ovqatga mos dizayn tizimi.
+  Brend: emerald (yangilik / "baraka"), aksent: orange (chegirma / shoshilinch).
+  Tailwind v4 — ranglar @theme ichida, shuning uchun bg-brand-600, text-ink kabi
+  utilitalar avtomatik hosil bo'ladi.
+*/
+
+@theme {
+  /* Brand — emerald */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  /* Accent — orange (chegirma, taymer, shoshilinch) */
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+
+  /* Neytral yuzalar */
+  --color-app: #f6f7f9;      /* sahifa foni */
+  --color-surface: #ffffff;  /* kartochka foni */
+  --color-ink: #0f172a;      /* asosiy matn */
+  --color-muted: #64748b;    /* ikkilamchi matn */
+  --color-faint: #94a3b8;    /* eng och matn */
+  --color-line: #e8eaee;     /* chegara chizig'i */
+
+  /* Semantik */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+
+  /* Radiuslar */
+  --radius-card: 1.25rem;   /* 20px */
+  --radius-sheet: 1.75rem;  /* 28px */
+
+  /* Shrift */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+/* Telegram Mini App tomonidan beriladigan tema o'zgaruvchilari fallback bilan.
+   Biz yorug' dizaynni asosiy qilamiz, lekin Telegram bergan ranglarni ham
+   hurmat qilamiz (agar mavjud bo'lsa). */
+:root {
+  --tg-viewport-height: 100vh;
+  color-scheme: light;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-app);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+/* Utilitalar */
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Telegram pastki panel + iPhone safe-area uchun */
+  .pb-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Yumshoq, minimal soyalar — yorug' dizayn uchun */
+@layer components {
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px -12px rgba(15, 23, 42, 0.08);
+  }
+  .press {
+    transition: transform 0.15s ease;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  .input {
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+    color: var(--color-ink);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input::placeholder {
+    color: var(--color-faint);
+  }
+  .input:focus {
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px var(--color-brand-100);
+  }
+}

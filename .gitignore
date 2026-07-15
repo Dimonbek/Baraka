@@ -1,8 +1,37 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Production build
+dist/
+/build
+
+# Python (eski backend — retire bo'lguncha)
 venv/
 __pycache__/
 *.db
 backend/static/uploads/
+
+# Env & secrets
 .env
-node_modules/
-dist/
+.env*.local
+
+# Prisma
+/prisma/*.db
+
+# Dev'da lokal yuklangan rasmlar (prod'da Vercel Blob)
+/public/uploads/
+
+# Vercel
+.vercel
+
+# Misc
 .DS_Store
+*.pem
+npm-debug.log*

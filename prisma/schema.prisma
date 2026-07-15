@@ -1,0 +1,140 @@
+// "Uvol Bo'lmasin" ma'lumotlar sxemasi.
+// Manba: eski backend/src/models.py (SQLAlchemy) — Postgres + Prisma'ga ko'chirildi.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7: ulanish satri prisma.config.ts va PrismaClient adapteriga ko'chdi.
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  telegramId  BigInt   @unique @map("telegram_id")
+  fullName    String?  @map("full_name")
+  phoneNumber String?  @map("phone_number")
+  role        String   @default("buyer") // buyer | seller | admin
+  status      String   @default("active") // active | blocked
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  restaurants   Restaurant[]
+  orders        Order[]
+  reviews       Review[]
+  notifications Notification[]
+  favorites     Favorite[]
+
+  @@map("users")
+}
+
+model Restaurant {
+  id           Int      @id @default(autoincrement())
+  ownerId      Int      @map("owner_id")
+  name         String
+  address      String?
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  thumbnailUrl String?  @map("thumbnail_url")
+  status       String   @default("pending") // pending | approved | blocked
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  dishes    Dish[]
+  favorites Favorite[]
+
+  @@index([ownerId])
+  @@map("restaurants")
+}
+
+model Dish {
+  id            Int      @id @default(autoincrement())
+  restaurantId  Int      @map("restaurant_id")
+  name          String
+  description   String?
+  imageUrl      String?  @map("image_url")
+  quantity      Int      @default(0)
+  category      String   @default("Milliy taomlar") // Milliy taomlar | Fast-fud | Shirinliklar | Salatlar
+  originalPrice Decimal  @map("original_price") @db.Decimal(10, 2)
+  discountPrice Decimal  @map("discount_price") @db.Decimal(10, 2)
+  pickupStart   String?  @map("pickup_start") // "18:00"
+  pickupEnd     String?  @map("pickup_end") // "21:30"
+  status        String   @default("active") // active | sold_out | hidden
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  reviews    Review[]
+
+  @@index([restaurantId])
+  @@index([status])
+  @@map("dishes")
+}
+
+model Order {
+  id               Int      @id @default(autoincrement())
+  buyerId          Int      @map("buyer_id")
+  dishId           Int      @map("dish_id")
+  quantity         Int      @default(1)
+  totalPrice       Decimal  @map("total_price") @db.Decimal(10, 2)
+  pickupTime       Int      @default(30) @map("pickup_time") // daqiqa
+  verificationCode String   @unique @map("verification_code")
+  status           String   @default("pending") // pending | completed | cancelled | expired
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  buyer User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  dish  Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@index([buyerId])
+  @@index([dishId])
+  @@map("orders")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  dishId    Int      @map("dish_id")
+  rating    Int // 1..5
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String?
+  message   String?
+  isRead    Boolean  @default(false) @map("is_read")
+  type      String? // order_status | new_offer | feedback | system
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model Favorite {
+  userId       Int      @map("user_id")
+  restaurantId Int      @map("restaurant_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@id([userId, restaurantId])
+  @@map("favorites")
+}

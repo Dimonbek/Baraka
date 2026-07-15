@@ -19,13 +19,16 @@ async function setMenuButton(bot: Bot, chatId: number, show: boolean) {
   try {
     await bot.api.setChatMenuButton({
       chat_id: chatId,
+      // Ro'yxatdan o'tgan: ilova tugmasi. Aks holda: buyruqlar menyusi
+      // (`commands`) — global BotFather menu button'ni bu chat uchun bekor
+      // qiladi, shunda ro'yxatdan o'tmaganda eski/ilova tugmasi ko'rinmaydi.
       menu_button: show
         ? {
             type: "web_app",
             text: "🍱 Uvol Bo'lmasin",
             web_app: { url: APP_URL },
           }
-        : { type: "default" },
+        : { type: "commands" },
     });
   } catch {
     /* eski klient — e'tibormas */

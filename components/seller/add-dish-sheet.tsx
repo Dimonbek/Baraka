@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ImagePlus } from "lucide-react";
+import { X, Check, ImageOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, ApiError } from "@/lib/api-client";
 import { haptic } from "@/lib/telegram-webapp";
@@ -17,18 +17,49 @@ interface Props {
 }
 
 export function AddDishSheet({ open, onClose, onCreated }: Props) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<string>(CATS[0].id);
+  const [images, setImages] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [loadingImages, setLoadingImages] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const reqId = useRef(0);
+
+  // Nom (yoki toifa) o'zgarganda — debounce bilan rasm takliflarini olamiz.
+  useEffect(() => {
+    const q = name.trim();
+    if (q.length < 2) {
+      setImages([]);
+      setSelected(null);
+      return;
+    }
+    const id = ++reqId.current;
+    setLoadingImages(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await api.get<{ images: string[] }>(
+          `/api/seller/dish-images?q=${encodeURIComponent(q)}&category=${encodeURIComponent(category)}`,
+        );
+        if (id !== reqId.current) return; // eskirgan javob
+        setImages(res.images);
+        // Avvalgi tanlov yangi ro'yxatda bo'lmasa — birinchisini tanlaymiz.
+        setSelected((prev) =>
+          prev && res.images.includes(prev) ? prev : (res.images[0] ?? null),
+        );
+      } catch {
+        if (id === reqId.current) setImages([]);
+      } finally {
+        if (id === reqId.current) setLoadingImages(false);
+      }
+    }, 450);
+    return () => clearTimeout(t);
+  }, [name, category]);
 
   function reset() {
-    setPreview(null);
-    if (fileRef.current) fileRef.current.value = "";
-  }
-
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) setPreview(URL.createObjectURL(file));
+    setName("");
+    setCategory(CATS[0].id);
+    setImages([]);
+    setSelected(null);
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -40,6 +71,7 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
       toast.error("Chegirma narxi asl narxdan past bo'lsin");
       return;
     }
+    if (selected) form.set("imageUrl", selected);
     setSubmitting(true);
     try {
       await api.post("/api/seller/dishes", form);
@@ -85,42 +117,84 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
-              {/* Rasm */}
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-line bg-app text-faint"
-              >
-                {preview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center gap-1">
-                    <ImagePlus size={28} />
-                    <span className="text-xs font-medium">Rasm qo&apos;shish</span>
-                  </div>
-                )}
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={onFileChange}
-                className="hidden"
-              />
-
               <Field label="Taom nomi">
                 <input
                   name="name"
                   required
-                  placeholder="Masalan: Toy oshi"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Masalan: Osh, Somsa, Lag'mon..."
                   className="input"
+                  autoComplete="off"
                 />
               </Field>
 
+              {/* Rasm takliflari — nom yozilgach avtomatik chiqadi */}
+              <div>
+                <span className="mb-1.5 block text-xs font-semibold text-muted">
+                  Rasm tanlang
+                </span>
+                {name.trim().length < 2 ? (
+                  <div className="flex h-24 items-center justify-center rounded-2xl border-2 border-dashed border-line bg-app px-4 text-center text-xs text-faint">
+                    Taom nomini yozing — mos rasmlar avtomatik chiqadi
+                  </div>
+                ) : loadingImages ? (
+                  <div className="flex gap-2.5">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="h-20 flex-1 animate-pulse rounded-xl bg-app"
+                      />
+                    ))}
+                  </div>
+                ) : images.length === 0 ? (
+                  <div className="flex h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-app text-xs text-faint">
+                    <ImageOff size={16} /> Rasm topilmadi (rasmsiz qo&apos;shiladi)
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {images.map((url) => {
+                      const active = selected === url;
+                      return (
+                        <button
+                          type="button"
+                          key={url}
+                          onClick={() => {
+                            setSelected(url);
+                            haptic.select();
+                          }}
+                          className={
+                            "press relative aspect-square overflow-hidden rounded-xl border-2 " +
+                            (active ? "border-brand-600" : "border-transparent")
+                          }
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                          {active && (
+                            <span className="absolute inset-0 flex items-center justify-center bg-brand-600/30">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white">
+                                <Check size={14} strokeWidth={3} />
+                              </span>
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <Field label="Toifa">
-                <select name="category" className="input" defaultValue={CATS[0].id}>
+                <select
+                  name="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="input"
+                >
                   {CATS.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.icon} {c.name}
@@ -173,8 +247,9 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="press w-full rounded-2xl bg-brand-600 py-3.5 font-bold text-white disabled:opacity-60"
+                className="press flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3.5 font-bold text-white disabled:opacity-60"
               >
+                {submitting && <Loader2 size={18} className="animate-spin" />}
                 {submitting ? "Qo'shilmoqda..." : "Taomni qo'shish"}
               </button>
             </form>

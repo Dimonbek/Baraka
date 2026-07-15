@@ -50,6 +50,9 @@ export async function POST(req: Request) {
     const quantity = Number(form.get("quantity") ?? 1);
     const pickupStart = String(form.get("pickupStart") ?? "18:00");
     const pickupEnd = String(form.get("pickupEnd") ?? "21:30");
+    // Yangi oqim: sotuvchi nom bo'yicha taklif etilgan rasmdan birini tanlaydi
+    // (imageUrl). Eski oqim (fayl yuklash) ham qo'llab-quvvatlanadi (image).
+    const pickedUrl = String(form.get("imageUrl") ?? "").trim();
     const image = form.get("image");
 
     if (!name || !Number.isFinite(originalPrice) || !Number.isFinite(discountPrice)) {
@@ -80,8 +83,12 @@ export async function POST(req: Request) {
       });
     }
 
-    let imageUrl: string | null = null;
-    if (image instanceof File && image.size > 0) {
+    // Faqat ruxsat etilgan (Unsplash) taklif URL'ini qabul qilamiz.
+    let imageUrl: string | null =
+      pickedUrl && pickedUrl.startsWith("https://images.unsplash.com/")
+        ? pickedUrl
+        : null;
+    if (!imageUrl && image instanceof File && image.size > 0) {
       imageUrl = await uploadImage(image, "dish");
     }
 

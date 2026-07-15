@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // Dev'da ngrok domeni orqali (Telegram Mini App) kirishga ruxsat.
+  allowedDevOrigins: ["shadowed-adelyn-goosenecked.ngrok-free.dev"],
   // Vercel Blob va boshqa tashqi rasm manbalari uchun
   images: {
     remotePatterns: [

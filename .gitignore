@@ -35,3 +35,12 @@ backend/static/uploads/
 .DS_Store
 *.pem
 npm-debug.log*
+
+# Vercel CLI
+.vercel
+.env*.local
+
+# Neon integratsiya (Vercel) o'rnatgan agent skill artifaktlari — lokal tooling
+.agents/
+.claude/skills/
+skills-lock.json

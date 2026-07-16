@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, ImageOff, Loader2 } from "lucide-react";
+import { X, Check, ImageOff, Loader2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, ApiError } from "@/lib/api-client";
 import { haptic } from "@/lib/telegram-webapp";
@@ -23,6 +23,10 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [loadingImages, setLoadingImages] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Sotuvchi o'z rasmini yuklasa
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const reqId = useRef(0);
 
   // Nom (yoki toifa) o'zgarganda — debounce bilan rasm takliflarini olamiz.
@@ -60,6 +64,18 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
     setCategory(CATS[0].id);
     setImages([]);
     setSelected(null);
+    setUploadFile(null);
+    setUploadPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploadFile(f);
+    setUploadPreview(URL.createObjectURL(f));
+    setSelected(null); // yuklangan rasm taklifni bekor qiladi
+    haptic.select();
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -71,7 +87,13 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
       toast.error("Chegirma narxi asl narxdan past bo'lsin");
       return;
     }
-    if (selected) form.set("imageUrl", selected);
+    // Yuklangan rasm ustuvor; aks holda tanlangan taklif URL'i.
+    if (uploadFile) {
+      form.set("image", uploadFile);
+      form.delete("imageUrl");
+    } else if (selected) {
+      form.set("imageUrl", selected);
+    }
     setSubmitting(true);
     try {
       await api.post("/api/seller/dishes", form);
@@ -129,27 +151,68 @@ export function AddDishSheet({ open, onClose, onCreated }: Props) {
                 />
               </Field>
 
-              {/* Rasm takliflari — nom yozilgach avtomatik chiqadi */}
+              {/* Rasm: taklif tanlash yoki o'z rasmini yuklash */}
               <div>
-                <span className="mb-1.5 block text-xs font-semibold text-muted">
-                  Rasm tanlang
-                </span>
-                {name.trim().length < 2 ? (
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted">Rasm</span>
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="press flex items-center gap-1 text-xs font-bold text-brand-600"
+                  >
+                    <Upload size={13} /> O&apos;z rasmim
+                  </button>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onFilePick}
+                  className="hidden"
+                />
+
+                {uploadPreview ? (
+                  // Yuklangan rasm
+                  <div className="relative h-40 w-full overflow-hidden rounded-2xl border-2 border-brand-600">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={uploadPreview}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadFile(null);
+                        setUploadPreview(null);
+                        if (fileRef.current) fileRef.current.value = "";
+                      }}
+                      className="press absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-white"
+                    >
+                      <X size={15} />
+                    </button>
+                    <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-lg bg-brand-600 px-2 py-1 text-[11px] font-bold text-white">
+                      <Check size={12} strokeWidth={3} /> O&apos;z rasmingiz
+                    </span>
+                  </div>
+                ) : name.trim().length < 2 ? (
                   <div className="flex h-24 items-center justify-center rounded-2xl border-2 border-dashed border-line bg-app px-4 text-center text-xs text-faint">
-                    Taom nomini yozing — mos rasmlar avtomatik chiqadi
+                    Taom nomini yozing — mos rasmlar chiqadi, yoki o&apos;z
+                    rasmingizni yuklang
                   </div>
                 ) : loadingImages ? (
-                  <div className="flex gap-2.5">
+                  <div className="grid grid-cols-4 gap-2.5">
                     {[0, 1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="h-20 flex-1 animate-pulse rounded-xl bg-app"
+                        className="aspect-square animate-pulse rounded-xl bg-app"
                       />
                     ))}
                   </div>
                 ) : images.length === 0 ? (
-                  <div className="flex h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-app text-xs text-faint">
-                    <ImageOff size={16} /> Rasm topilmadi (rasmsiz qo&apos;shiladi)
+                  <div className="flex h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-app px-4 text-center text-xs text-faint">
+                    <ImageOff size={16} /> Mos rasm topilmadi — o&apos;z rasmingizni
+                    yuklang
                   </div>
                 ) : (
                   <div className="grid grid-cols-4 gap-2.5">

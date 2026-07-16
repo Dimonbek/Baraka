@@ -1,146 +1,89 @@
 /**
- * Taom nomi bo'yicha mos rasm takliflari.
+ * Taom nomi bo'yicha ANIQ rasm takliflari.
  *
- * Sotuvchi rasm yuklamaydi — taom nomini yozadi, biz esa 3-4 ta mos rasm
- * taklif qilamiz (Unsplash CDN'dan). Barcha URL'lar oldindan tekshirilgan (200).
- * Sotuvchi o'ziga yoqqanini tanlaydi — shuning uchun ba'zi takliflar taxminiy
- * bo'lsa ham muammo emas.
+ * Rasmlar Wikimedia Commons'dan (to'g'ri nomlangan) yuklab olinib, o'zimizda
+ * (public/food/) saqlanadi — aniq, ishonchli, rate-limitsiz.
+ * Ushbu fayl _gen_food_images.py orqali generatsiya qilinadi.
+ *
+ * Sotuvchi o'z rasmini ham yuklashi mumkin (add-dish-sheet).
  */
 
-const U = (id: string) => `https://images.unsplash.com/${id}?w=600&q=80`;
+// Aniq taom havzalari (lokal /food/ yo'llari)
+const POOLS: Record<string, string[]> = {
+  osh: ["/food/osh-1.jpg", "/food/osh-2.jpg", "/food/osh-3.jpg", "/food/osh-4.jpg"],
+  somsa: ["/food/somsa-1.jpg", "/food/somsa-2.jpg", "/food/somsa-3.jpg", "/food/somsa-4.jpg"],
+  lagman: ["/food/lagman-1.jpg", "/food/lagman-2.jpg", "/food/lagman-3.jpg", "/food/lagman-4.jpg"],
+  manti: ["/food/manti-1.jpg", "/food/manti-2.jpg", "/food/manti-3.jpg", "/food/manti-4.jpg"],
+  kabob: ["/food/kabob-1.jpg", "/food/kabob-2.jpg", "/food/kabob-3.jpg", "/food/kabob-4.jpg"],
+  chuchvara: ["/food/chuchvara-1.jpg", "/food/chuchvara-2.jpg", "/food/chuchvara-3.jpg", "/food/chuchvara-4.jpg"],
+  non: ["/food/non-1.jpg", "/food/non-2.jpg", "/food/non-3.jpg", "/food/non-4.jpg"],
+  shorva: ["/food/shorva-1.jpg", "/food/shorva-2.jpg", "/food/shorva-3.jpg", "/food/shorva-4.jpg"],
+  lavash: ["/food/lavash-1.jpg", "/food/lavash-2.jpg", "/food/lavash-3.jpg", "/food/lavash-4.jpg"],
+  hotdog: ["/food/hotdog-1.jpg", "/food/hotdog-2.jpg", "/food/hotdog-3.jpg", "/food/hotdog-4.jpg"],
+  burger: ["/food/burger-1.jpg", "/food/burger-2.jpg", "/food/burger-3.jpg", "/food/burger-4.jpg"],
+  pizza: ["/food/pizza-1.jpg", "/food/pizza-2.jpg", "/food/pizza-3.jpg", "/food/pizza-4.jpg"],
+  fri: ["/food/fri-1.jpg", "/food/fri-2.jpg", "/food/fri-3.jpg", "/food/fri-4.jpg"],
+  salat: ["/food/salat-1.jpg", "/food/salat-2.jpg", "/food/salat-3.jpg", "/food/salat-4.jpg"],
+  tort: ["/food/tort-1.jpg", "/food/tort-2.jpg", "/food/tort-3.jpg", "/food/tort-4.jpg"],
+  muzqaymoq: ["/food/muzqaymoq-1.jpg", "/food/muzqaymoq-2.jpg", "/food/muzqaymoq-3.jpg", "/food/muzqaymoq-4.jpg"],
+  choy: ["/food/choy-1.jpg", "/food/choy-2.jpg", "/food/choy-3.jpg", "/food/choy-4.jpg"],
+  kofe: ["/food/kofe-1.jpg", "/food/kofe-2.jpg", "/food/kofe-3.jpg", "/food/kofe-4.jpg"],
+  sendvich: ["/food/sendvich-1.jpg", "/food/sendvich-2.jpg", "/food/sendvich-3.jpg", "/food/sendvich-4.jpg"],
+  sushi: ["/food/sushi-1.jpg", "/food/sushi-2.jpg", "/food/sushi-3.jpg", "/food/sushi-4.jpg"],
+  shirinlik: ["/food/shirinlik-1.jpg", "/food/shirinlik-2.jpg", "/food/shirinlik-3.jpg", "/food/shirinlik-4.jpg"],
+  salat2: ["/food/salat2-1.jpg", "/food/salat2-2.jpg", "/food/salat2-3.jpg", "/food/salat2-4.jpg"],
+};
 
-// Tekshirilgan Unsplash rasm ID'lari bo'yicha "havzalar" (pools).
-const POOLS = {
-  osh: [
-    "photo-1633945274405-b6c8069047b0",
-    "photo-1596797038530-2c107229654b",
-    "photo-1642821373181-696a54913e93",
-    "photo-1585032226651-759b368d7246",
-  ],
-  somsa: [
-    "photo-1601050690597-df0568f70950",
-    "photo-1509440159596-0249088772ff",
-    "photo-1608039755401-742074f0548d",
-    "photo-1476718406336-bb5a9690ee2a",
-  ],
-  kabob: [
-    "photo-1529193591184-b1d58069ecdd",
-    "photo-1555939594-58d7cb561ad1",
-    "photo-1544025162-d76694265947",
-    "photo-1598103442097-8b74394b95c6",
-  ],
-  manti: [
-    "photo-1563245372-f21724e3856d",
-    "photo-1534422298391-e4f8c172dddb",
-    "photo-1596797038530-2c107229654b",
-    "photo-1633945274405-b6c8069047b0",
-  ],
-  shorva: [
-    "photo-1547592166-23ac45744acd",
-    "photo-1604909052743-94e838986d24",
-    "photo-1550547660-d9450f859349",
-  ],
-  lagman: [
-    "photo-1547592180-85f173990554",
-    "photo-1621996346565-e3dbc646d9a9",
-    "photo-1604909052743-94e838986d24",
-  ],
-  non: [
-    "photo-1509440159596-0249088772ff",
-    "photo-1549931319-a545dcf3bc73",
-  ],
-  burger: [
-    "photo-1568901346375-23c9450c58cd",
-    "photo-1565299624946-b28f40a0ae38",
-    "photo-1571091718767-18b5b1457add",
-  ],
-  pizza: [
-    "photo-1513104890138-7c749659a591",
-    "photo-1610970881699-44a5587cabec",
-    "photo-1626804475297-41608ea09aeb",
-  ],
-  fastfud: [
-    "photo-1568901346375-23c9450c58cd",
-    "photo-1513104890138-7c749659a591",
-    "photo-1573080496219-bb080dd4f877",
-    "photo-1528735602780-2552fd46c7af",
-  ],
-  salat: [
-    "photo-1512621776951-a57141f2eefd",
-    "photo-1606491956689-2ea866880c84",
-  ],
-  tort: [
-    "photo-1578985545062-69928b1d9587",
-    "photo-1495147466023-ac5c588e2e94",
-  ],
-  shirinlik: [
-    "photo-1578985545062-69928b1d9587",
-    "photo-1551024601-bec78aea704b",
-    "photo-1497034825429-c343d7c6a68f",
-    "photo-1495147466023-ac5c588e2e94",
-  ],
-  muzqaymoq: [
-    "photo-1497034825429-c343d7c6a68f",
-    "photo-1567620905732-2d1ec7ab7445",
-  ],
-  ichimlik: [
-    "photo-1544787219-7f47ccb76574",
-    "photo-1509042239860-f550ce710b93",
-  ],
-  sushi: [
-    "photo-1579871494447-9811cf80d66c",
-  ],
-  // Umumiy — nom hech nimaga mos kelmasa aralash taomlar.
-  generic: [
-    "photo-1633945274405-b6c8069047b0",
-    "photo-1568901346375-23c9450c58cd",
-    "photo-1512621776951-a57141f2eefd",
-    "photo-1578985545062-69928b1d9587",
-    "photo-1547592180-85f173990554",
-    "photo-1552539618-7eec9b4d1796",
-  ],
-} satisfies Record<string, string[]>;
+// Kategoriya aralashmalari (nom mos kelmaganda — kategoriya bo'yicha)
+const CATEGORY_MIX: Record<string, string[]> = {
+  "Milliy taomlar": ["/food/osh-1.jpg", "/food/somsa-1.jpg", "/food/lagman-1.jpg", "/food/manti-1.jpg"],
+  "Fast-fud": ["/food/burger-1.jpg", "/food/pizza-1.jpg", "/food/hotdog-1.jpg", "/food/lavash-1.jpg"],
+  Shirinliklar: ["/food/tort-1.jpg", "/food/muzqaymoq-1.jpg", "/food/shirinlik-1.jpg"],
+  Salatlar: ["/food/salat-1.jpg", "/food/salat2-1.jpg"],
+};
 
-type PoolKey = keyof typeof POOLS;
+const GENERIC: string[] = ["/food/osh-1.jpg", "/food/burger-1.jpg", "/food/salat-1.jpg", "/food/tort-1.jpg"];
 
-// Nom ichidagi kalit so'z (kichik harf) -> havza. Birinchi moslik yutadi.
-const KEYWORDS: [string[], PoolKey][] = [
+// Nom ichidagi kalit so'z (kichik harf) -> POOLS kaliti. Birinchi moslik yutadi.
+const KEYWORDS: [string[], string][] = [
   [["osh", "palov", "plov", "pilaf", "o'sh"], "osh"],
   [["somsa", "samsa", "samosa"], "somsa"],
-  [["kabob", "kabab", "kebab", "shashlik", "shashlyk", "shishlik", "jaz", "tandir", "grill", "jarkop", "jarqop"], "kabob"],
-  [["manti", "mantı", "chuchvara", "dumpling", "pelmen", "hinkal"], "manti"],
-  [["shorva", "sho'rva", "shurva", "shurpa", "mastava", "sup", "soup", "moshxo'rda", "moshxurda"], "shorva"],
-  [["lagman", "lag'mon", "lagmon", "norin", "makaron", "pasta", "spagetti", "noodle", "ugra"], "lagman"],
+  [["lagman", "lag'mon", "lagmon", "norin", "ugra"], "lagman"],
+  [["manti", "mantı"], "manti"],
+  [["chuchvara", "pelmen", "dumpling"], "chuchvara"],
+  [["kabob", "kabab", "kebab", "shashlik", "shashlyk", "shishlik", "jaz", "tandir", "grill", "jarkop"], "kabob"],
+  [["shorva", "sho'rva", "shurva", "shurpa", "mastava", "sup", "soup", "moshxo'rda"], "shorva"],
   [["non", "patir", "lepyoshka", "bread", "obi non"], "non"],
+  [["lavash", "shaurma", "shawarma", "shaverma", "doner", "döner"], "lavash"],
+  [["hot dog", "hotdog", "xot-dog", "xotdog", "sosiska"], "hotdog"],
   [["burger", "gamburger", "hamburger", "cheeseburger"], "burger"],
   [["pizza", "pitsa"], "pizza"],
-  [["fri", "fries", "xot-dog", "hot dog", "hotdog", "sendvich", "sandwich", "shaurma", "shawarma", "shaverma", "lavash", "doner", "döner", "nugget", "naggets", "strips", "club"], "fastfud"],
-  [["salat", "salad", "achchiq-chuchuk", "achchiq", "vinegret", "sezar", "caesar"], "salat"],
-  [["tort", "kek", "cake", "pirog", "cheesecake"], "tort"],
-  [["shirin", "desert", "dessert", "pirojni", "donut", "ponchik", "chak-chak", "chakchak", "halva", "holva", "pahlava", "pashmak", "napoleon", "medovik", "ekler", "maffin", "muffin"], "shirinlik"],
+  [["fri", "fries", "kartoshka fri", "free"], "fri"],
+  [["sendvich", "sandwich", "club"], "sendvich"],
+  [["salat", "salad", "achchiq-chuchuk", "achchiq", "achuchuk", "vinegret"], "salat"],
+  [["sezar", "caesar"], "salat2"],
+  [["tort", "kek", "cake", "pirog", "cheesecake", "napoleon", "medovik"], "tort"],
   [["muzqaymoq", "morojni", "morojniy", "ice cream", "plombir", "sundae"], "muzqaymoq"],
-  [["choy", "choi", "tea", "kofe", "coffee", "kapuchino", "latte", "sharbat", "juice", "sok", "kola", "cola", "gazak", "suv", "ichimlik", "kompot", "smuzi", "smoothie", "milkshake", "koktel"], "ichimlik"],
+  [["shirin", "desert", "dessert", "pirojni", "donut", "ponchik", "chak-chak", "halva", "holva", "pahlava", "baklava", "ekler", "maffin", "muffin"], "shirinlik"],
   [["sushi", "rol", "roll", "filadelfiya"], "sushi"],
+  [["choy", "choi", "tea", "kompot"], "choy"],
+  [["kofe", "coffee", "kapuchino", "latte", "americano", "espresso"], "kofe"],
 ];
 
-// Kategoriya (lib/types CATEGORIES id) -> havza (nom mos kelmaganda).
-const CATEGORY_POOL: Record<string, PoolKey> = {
+// Kategoriya (lib/types CATEGORIES id) -> POOLS kaliti (aniq bitta taom fallback)
+const CATEGORY_POOL: Record<string, string> = {
   "Milliy taomlar": "osh",
-  "Fast-fud": "fastfud",
-  Shirinliklar: "shirinlik",
+  "Fast-fud": "burger",
+  Shirinliklar: "tort",
   Salatlar: "salat",
 };
 
 function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[`'']/g, "'")
-    .trim();
+  return s.toLowerCase().replace(/[`'\u2018\u2019]/g, "'").trim();
 }
 
 /**
- * Taom nomi (va ixtiyoriy kategoriya) bo'yicha rasm URL'lari qaytaradi.
- * Har doim kamida bir nechta variant (generic fallback bilan).
+ * Taom nomi (va ixtiyoriy kategoriya) bo'yicha aniq rasm yo'llari qaytaradi.
  */
 export function suggestImages(
   name: string,
@@ -152,20 +95,31 @@ export function suggestImages(
 
   if (n) {
     for (const [words, key] of KEYWORDS) {
-      if (words.some((w) => n.includes(w))) {
+      if (words.some((w) => n.includes(w)) && POOLS[key]?.length) {
         pool = POOLS[key];
         break;
       }
     }
   }
 
-  if (!pool && category && CATEGORY_POOL[category]) {
+  // Nom mos kelmasa — kategoriya aralashmasi
+  if (!pool && category && CATEGORY_MIX[category]?.length) {
+    pool = CATEGORY_MIX[category];
+  }
+  // Yoki kategoriyaning aniq taomi
+  if (!pool && category && CATEGORY_POOL[category] && POOLS[CATEGORY_POOL[category]]?.length) {
     pool = POOLS[CATEGORY_POOL[category]];
   }
+  if (!pool || pool.length === 0) pool = GENERIC;
 
-  if (!pool) pool = POOLS.generic;
-
-  // Havza kichik bo'lsa generic bilan to'ldiramiz (takrorsiz).
-  const ids = [...new Set([...pool, ...POOLS.generic])].slice(0, count);
-  return ids.map(U);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const u of [...pool, ...GENERIC]) {
+    if (!seen.has(u)) {
+      seen.add(u);
+      out.push(u);
+    }
+    if (out.length >= count) break;
+  }
+  return out;
 }

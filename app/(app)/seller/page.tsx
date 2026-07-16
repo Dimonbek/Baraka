@@ -14,17 +14,17 @@ import {
   MapPin,
   LocateFixed,
   Loader2,
-  Check,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, ApiError } from "@/lib/api-client";
 import { haptic } from "@/lib/telegram-webapp";
-import { requestLocation } from "@/lib/location";
 import type { ProfileDTO } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddDishSheet } from "@/components/seller/add-dish-sheet";
+import { LocationPicker } from "@/components/location-picker";
 
 interface Analytics {
   totalDishes: number;
@@ -53,6 +53,11 @@ export default function SellerPage() {
     null,
   );
   const [locBusy, setLocBusy] = useState(false);
+  // Dashboard joylashuv modali
+  const [showLocModal, setShowLocModal] = useState(false);
+  const [modalLoc, setModalLoc] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
 
   const loadDashboard = useCallback(async () => {
     const [a, d] = await Promise.all([
@@ -80,21 +85,6 @@ export default function SellerPage() {
     load();
   }, [load]);
 
-  // Ro'yxatdan o'tishda joylashuvni olish
-  async function shareRegLocation() {
-    setLocBusy(true);
-    try {
-      const l = await requestLocation();
-      setRegLoc(l);
-      haptic.notify("success");
-      toast.success("Joylashuv olindi");
-    } catch {
-      toast.error("Joylashuvga ruxsat bering yoki qayta urinib ko'ring");
-    } finally {
-      setLocBusy(false);
-    }
-  }
-
   async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -115,24 +105,35 @@ export default function SellerPage() {
     }
   }
 
-  // Dashboard: restoran joylashuvini belgilash/yangilash
-  async function updateLocation() {
+  // Dashboard: joylashuv modalini ochish
+  function openLocModal() {
+    const r = profile?.restaurant;
+    setModalLoc(
+      r?.latitude != null && r?.longitude != null
+        ? { lat: r.latitude, lng: r.longitude }
+        : null,
+    );
+    setShowLocModal(true);
+  }
+
+  // Modal: joylashuvni saqlash
+  async function saveLocation() {
+    if (!modalLoc) {
+      toast.error("Xaritada joyni belgilang");
+      return;
+    }
     setLocBusy(true);
     try {
-      const l = await requestLocation();
       await api.patch("/api/seller/restaurant", {
-        latitude: l.lat,
-        longitude: l.lng,
+        latitude: modalLoc.lat,
+        longitude: modalLoc.lng,
       });
       haptic.notify("success");
       toast.success("Joylashuv saqlandi");
+      setShowLocModal(false);
       await load();
     } catch (err) {
-      toast.error(
-        err instanceof ApiError
-          ? err.message
-          : "Joylashuvga ruxsat bering yoki qayta urinib ko'ring",
-      );
+      toast.error(err instanceof ApiError ? err.message : "Saqlanmadi");
     } finally {
       setLocBusy(false);
     }
@@ -217,31 +218,18 @@ export default function SellerPage() {
 
           {/* Joylashuv — xaridorlarga masofa/radius bo'yicha ko'rsatish uchun */}
           <div>
-            <span className="mb-1.5 block text-xs font-semibold text-muted">
-              Joylashuv
-            </span>
-            <button
-              type="button"
-              onClick={shareRegLocation}
-              disabled={locBusy}
-              className={
-                "press flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold disabled:opacity-60 " +
-                (regLoc
-                  ? "border-brand-600 bg-brand-50 text-brand-700"
-                  : "border-line bg-surface text-ink")
-              }
-            >
-              {locBusy ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : regLoc ? (
-                <Check size={16} />
-              ) : (
-                <LocateFixed size={16} />
+            <span className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-muted">
+              <MapPin size={13} /> Joylashuv
+              {regLoc && (
+                <span className="ml-auto font-bold text-brand-600">
+                  belgilandi ✓
+                </span>
               )}
-              {regLoc ? "Joylashuv olindi" : "Joylashuvni ulashish"}
-            </button>
+            </span>
+            <LocationPicker value={regLoc} onChange={setRegLoc} />
             <p className="mt-1.5 text-[11px] text-faint">
-              Xaridorlar sizni yaqin-atrofdan (masofa bo&apos;yicha) topishi uchun.
+              Xaridorlar sizni yaqin-atrofdan topishi uchun. &quot;Mening
+              joyim&quot; tugmasini bosing yoki markerni suring.
             </p>
           </div>
 
@@ -325,20 +313,13 @@ export default function SellerPage() {
             </div>
             <button
               type="button"
-              onClick={updateLocation}
-              disabled={locBusy}
+              onClick={openLocModal}
               className={
-                "press flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold disabled:opacity-60 " +
-                (hasLoc
-                  ? "bg-app text-ink"
-                  : "bg-brand-600 text-white")
+                "press flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold " +
+                (hasLoc ? "bg-app text-ink" : "bg-brand-600 text-white")
               }
             >
-              {locBusy ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <LocateFixed size={15} />
-              )}
+              <LocateFixed size={15} />
               {hasLoc ? "Yangilash" : "Belgilash"}
             </button>
           </div>
@@ -436,6 +417,40 @@ export default function SellerPage() {
         onClose={() => setShowAdd(false)}
         onCreated={loadDashboard}
       />
+
+      {/* Joylashuv modali */}
+      {showLocModal && (
+        <div
+          onClick={() => setShowLocModal(false)}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-[28px] bg-surface p-6 pb-safe"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-ink">Joylashuvni belgilash</h2>
+              <button
+                type="button"
+                onClick={() => setShowLocModal(false)}
+                className="press flex h-8 w-8 items-center justify-center rounded-full bg-app text-muted"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <LocationPicker value={modalLoc} onChange={setModalLoc} />
+            <button
+              type="button"
+              onClick={saveLocation}
+              disabled={locBusy || !modalLoc}
+              className="press mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3.5 font-bold text-white disabled:opacity-60"
+            >
+              {locBusy && <Loader2 size={18} className="animate-spin" />}
+              {locBusy ? "Saqlanmoqda..." : "Saqlash"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

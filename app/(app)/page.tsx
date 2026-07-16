@@ -87,7 +87,7 @@ export default function HomePage() {
     });
   }, [dishes, query, category, radius]);
 
-  const RADII = [5, 10, 15] as const;
+  const RADII = [10, 50, 100] as const;
 
   async function toggleFavorite(dish: DishDTO) {
     haptic.impact("light");

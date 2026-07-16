@@ -83,11 +83,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // Faqat ruxsat etilgan (Unsplash) taklif URL'ini qabul qilamiz.
-    let imageUrl: string | null =
-      pickedUrl && pickedUrl.startsWith("https://images.unsplash.com/")
-        ? pickedUrl
-        : null;
+    // Ruxsat etilgan rasm manbalari: lokal taklif (/food/...),
+    // Vercel Blob (yuklangan), yoki Unsplash (eski).
+    const allowedUrl =
+      pickedUrl.startsWith("/food/") ||
+      pickedUrl.includes(".public.blob.vercel-storage.com") ||
+      pickedUrl.startsWith("https://images.unsplash.com/") ||
+      pickedUrl.startsWith("https://upload.wikimedia.org/");
+    let imageUrl: string | null = allowedUrl ? pickedUrl : null;
+    // Sotuvchi o'z rasmini yuklagan bo'lsa — Vercel Blob'ga saqlaymiz.
     if (!imageUrl && image instanceof File && image.size > 0) {
       imageUrl = await uploadImage(image, "dish");
     }

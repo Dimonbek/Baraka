@@ -131,9 +131,20 @@ function Stat({
   );
 }
 
+/* Chop etish (PDF zaxira) uchun uslublar — Ctrl+P → "Save as PDF" */
+const printCss = `
+@media print {
+  header { display: none !important; }
+  section { break-inside: avoid; page-break-inside: avoid; }
+  a[href^="http"]::after { content: ""; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+`;
+
 export default function DeckPage() {
   return (
     <main className="bg-app font-sans">
+      <style dangerouslySetInnerHTML={{ __html: printCss }} />
       {/* ── Sarlavha paneli ── */}
       <header className="sticky top-0 z-50 border-b border-line bg-surface/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3 sm:px-10">

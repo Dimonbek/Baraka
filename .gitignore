@@ -46,3 +46,6 @@ npm-debug.log*
 skills-lock.json
 
 .env*
+
+# Office vaqtinchalik lock fayllari
+~$*
